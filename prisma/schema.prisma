@@ -1,0 +1,258 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ataccount {
+  id                 Int       @id @default(autoincrement())
+  acctno             Int
+  oldacctnum         String?   @db.VarChar(20)
+  oldpremnum         String?   @db.VarChar(20)
+  premiseid          Int
+  customerid         Int
+  bill_name          String    @db.VarChar(100)
+  bill_attention     String?   @db.VarChar(50)
+  bill_line1         String    @db.VarChar(100)
+  bill_line2         String?   @db.VarChar(100)
+  bill_city          String    @db.VarChar(50)
+  bill_state         String    @db.Char(2)
+  bill_zip           String    @db.VarChar(10)
+  start_date         DateTime  @db.Timestamp(6)
+  end_date           DateTime? @db.Timestamp(6)
+  last_bill_end_date DateTime? @db.Timestamp(6)
+  last_billed        DateTime  @db.Timestamp(6)
+  current_balance    Decimal   @db.Decimal(9, 2)
+  ytd_usage          Int
+  updated            DateTime  @db.Timestamp(6)
+  updateby           Int
+  directpay          Boolean?
+  ytd_usage_non_pot  Int
+  water_state        Boolean
+  do_not_mail        Boolean
+  onlinepay          Boolean?
+  paperless          Boolean?
+}
+
+model icms_master {
+  id                  Int       @id @default(autoincrement())
+  year                Int?
+  month               String?   @db.VarChar(7)
+  entry_number        String?   @db.VarChar(20)
+  version             Int?
+  item_num            Int?
+  entry_status        String?   @db.VarChar(20)
+  reg_date            String?   @db.VarChar(50)
+  regime              String?   @db.VarChar(10)
+  cpc                 String?   @db.VarChar(10)
+  quantity            Decimal?  @db.Decimal(18, 2)
+  fob_value           Decimal?  @db.Decimal(18, 2)
+  currency            String?   @db.VarChar(5)
+  entry_currency_val  Decimal?  @db.Decimal(18, 2)
+  hs_chapter          String?   @db.VarChar(5)
+  hscode              String?   @db.VarChar(15)
+  good_description    String?
+  origin_country_code String?   @db.VarChar(5)
+  origin_country      String?   @db.VarChar(50)
+  country_code        String?   @db.VarChar(5)
+  country_name        String?   @db.VarChar(50)
+  station             String?   @db.VarChar(10)
+  place_of_delivery   String?   @db.VarChar(10)
+  total_tax_1         Decimal?  @db.Decimal(18, 2)
+  total_tax_2         Decimal?  @db.Decimal(18, 2)
+  import_duty         Decimal?  @db.Decimal(18, 2)
+  import_vat          Decimal?  @db.Decimal(18, 2)
+  excise              Decimal?  @db.Decimal(18, 2)
+  export_levy         Decimal?  @db.Decimal(18, 2)
+  idf                 Decimal?  @db.Decimal(18, 2)
+  rdl                 Decimal?  @db.Decimal(18, 2)
+  rml                 Decimal?  @db.Decimal(18, 2)
+  prl                 Decimal?  @db.Decimal(18, 2)
+  mss                 Decimal?  @db.Decimal(18, 2)
+  other_tax           Decimal?  @db.Decimal(18, 2)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+
+  @@unique([entry_number, item_num, version, reg_date, regime])
+  @@unique([entry_number, item_num, version])
+  @@index([year, month])
+}
+
+model icms_insert_errors {
+  id            Int       @id @default(autoincrement())
+  error_message String?
+  failed_sql    String?
+  chunk_info    Json?
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+// ==========================================
+// KAM Resource Centre - Content Management
+// ==========================================
+
+// Sectors (e.g., Flowers, Agriculture, Manufacturing)
+model kam_sector {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(100)
+  slug        String    @unique @db.VarChar(100)
+  description String?   @db.Text
+  icon        String?   @db.VarChar(50)
+  color       String?   @db.VarChar(7)
+  is_active   Boolean   @default(true)
+  sort_order  Int       @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  contents    kam_content[]
+  sub_sectors kam_sub_sector[]
+}
+
+// Sub-sectors within a sector
+model kam_sub_sector {
+  id          Int       @id @default(autoincrement())
+  sector_id   Int
+  name        String    @db.VarChar(100)
+  slug        String    @db.VarChar(100)
+  description String?   @db.Text
+  is_active   Boolean   @default(true)
+  sort_order  Int       @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  sector      kam_sector   @relation(fields: [sector_id], references: [id])
+  contents    kam_content[]
+
+  @@unique([sector_id, slug])
+}
+
+// Content types
+enum ContentType {
+  PDF
+  POWERBI
+  DATABASE
+  LINK
+}
+
+// Content visibility
+enum ContentVisibility {
+  PUBLIC
+  MEMBER
+  ADMIN
+}
+
+// Pricing tiers for monetization
+enum PricingTier {
+  FREE
+  MEMBER_ONLY
+  PAID
+}
+
+// Purchase status
+enum PurchaseStatus {
+  PENDING
+  PAID
+  EXPIRED
+  DOWNLOADED
+}
+
+// Main content model - stores all resources (PDFs, Power BI, Database exports)
+model kam_content {
+  id              Int               @id @default(autoincrement())
+  sector_id       Int?
+  sub_sector_id   Int?
+  
+  title           String            @db.VarChar(255)
+  slug            String            @unique @db.VarChar(255)
+  description     String?           @db.Text
+  content_type    ContentType
+  visibility      ContentVisibility @default(PUBLIC)
+  pricing_tier    PricingTier?      @default(FREE)
+  price_kes       Decimal?          @db.Decimal(10,2)
+  
+  // For PDF
+  pdf_url         String?           @db.VarChar(500)
+  pdf_size        String?           @db.VarChar(20)
+  
+  // For Power BI
+  powerbi_url     String?           @db.VarChar(500)
+  powerbi_embed   String?           @db.Text
+  
+  // For Database
+  db_query_type   String?           @db.VarChar(50)
+  
+  // For external links
+  external_url    String?           @db.VarChar(500)
+  
+  // Metadata
+  tags            String?           @db.VarChar(500)
+  keywords        String?           @db.VarChar(500)
+  author          String?           @db.VarChar(100)
+  published_date  DateTime?
+  
+  // Status
+  is_featured     Boolean           @default(false)
+  is_active       Boolean           @default(true)
+  view_count      Int               @default(0)
+  
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+
+  sector          kam_sector?       @relation(fields: [sector_id], references: [id])
+  sub_sector      kam_sub_sector?   @relation(fields: [sub_sector_id], references: [id])
+  purchases       Purchase[]
+
+  @@index([sector_id])
+  @@index([sub_sector_id])
+  @@index([content_type])
+  @@index([visibility])
+  @@index([pricing_tier])
+  @@index([is_featured])
+}
+
+// Search history for analytics
+model kam_search_log {
+  id          Int       @id @default(autoincrement())
+  query       String    @db.VarChar(255)
+  results     Int       @default(0)
+  ip_address  String?   @db.VarChar(45)
+  user_agent  String?   @db.VarChar(500)
+  created_at  DateTime  @default(now())
+
+  @@index([query])
+  @@index([created_at])
+}
+
+// Users - linked to NextAuth/Keycloak accounts
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("PUBLIC") // SUPERADMIN | MEMBER | PUBLIC
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  purchases Purchase[]
+
+  @@map("users")
+}
+
+// Purchases - track paid downloads
+model Purchase {
+  id             String         @id @default(cuid())
+  user_id        String
+  content_id     Int
+  mpesa_txn_id   String         @unique
+  amount         Decimal        @db.Decimal(10,2)
+  status         PurchaseStatus @default(PENDING)
+  download_token String         @unique
+  expires_at     DateTime?
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+
+  user           User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  content        kam_content    @relation(fields: [content_id], references: [id], onDelete: Cascade)
+
+  @@map("purchases")
+}

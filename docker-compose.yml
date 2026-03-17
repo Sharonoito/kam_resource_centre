@@ -1,0 +1,68 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on: [postgres, keycloak, minio]
+    environment:
+      DATABASE_URL: postgresql://kam:secret@postgres:5432/kam_db
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: kam
+      POWERBI_CLIENT_ID: ${POWERBI_CLIENT_ID}
+      POWERBI_CLIENT_SECRET: ${POWERBI_CLIENT_SECRET}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      POWERBI_PUBLIC_REPORT_ID: ${POWERBI_PUBLIC_REPORT_ID}
+      POWERBI_PREMIUM_REPORT_ID: ${POWERBI_PREMIUM_REPORT_ID}
+      POWERBI_PUBLIC_GROUP_ID: ${POWERBI_PUBLIC_GROUP_ID}
+      POWERBI_PREMIUM_GROUP_ID: ${POWERBI_PREMIUM_GROUP_ID}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: kam_db
+      POSTGRES_USER: kam
+      POSTGRES_PASSWORD: secret
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/kam_db
+      KC_DB_USERNAME: kam
+      KC_DB_PASSWORD: secret
+
+  minio:
+    image: minio/minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+
+  caddy:
+    image: caddy:alpine
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on: [app]
+
+volumes:
+  pg_data:
+  minio_data:
+  caddy_data:

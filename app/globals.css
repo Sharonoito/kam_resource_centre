@@ -1,6 +1,37 @@
 @import "tailwindcss";
 
 :root {
+  /* Brand Colors */
+  --kam-navy: #0B1F3A;
+  --kam-blue: #193C8D;
+  --kam-gold: #E7B947;
+  --kam-gold-pale: #FDF3DC;
+
+  /* Default system colors */
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-kam-navy: var(--kam-navy);
+  --color-kam-blue: var(--kam-blue);
+  --color-kam-gold: var(--kam-gold);
+  --color-kam-gold-pale: var(--kam-gold-pale);
+
+  --font-serif: "Playfair Display", serif;
+}
+
+/* Global body styling */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui;
+}
+
+/* @import "tailwindcss";
+
+:root {
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -23,4 +54,4 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-}
+} */
