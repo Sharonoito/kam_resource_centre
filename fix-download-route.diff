@@ -1,0 +1,35 @@
+--- app/api/documents/download/[id]/route.ts
++++ app/api/documents/download/[id]/route.ts
+@@ -29,6 +29,20 @@
+   const doc = await prisma.vDocumentsAdmin.findUnique({
+     where: { id: docId },
+     select: { download_url: true, title: true }
+   });
+ 
++  // Fix: Use raw query for sector.resource_documents (@@ignore model)
++  const resourceDocRaw = await prisma.$queryRaw<
++    { sharepoint_download_url: string | null, sharepoint_file_id: string | null, file_data: Buffer | null, mime_type: string | null, original_filename: string | null, filename: string }[]
++  >`SELECT sharepoint_download_url, sharepoint_file_id, file_data, mime_type, original_filename, filename 
++    FROM sector.resource_documents WHERE id = ${docId}`;
++
++  const resourceDoc = resourceDocRaw[0] || null;
++
++  if (!doc || !doc.download_url) {
++    return NextResponse.json({ error: "Document or URL not found" }, { status: 404 });
++  }
++
+   const resourceDoc = await prisma.resource_documents.findUnique({
+     where: { id: docId },
+     select: {
+@@ -74,7 +88,7 @@
+     const response = await fetchDocument(targetUrl);
+     if (response.ok) {
+       upstreamResponse = response;
+       break;
+     }
+ 
+-    let body: unknown = {};
++    let body: unknown = null;
+     try {
+       body = await response.clone().json();
+     } catch {

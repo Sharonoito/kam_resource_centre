@@ -1,7 +1,8 @@
-# TODO Steps for Sections Landing Page
+# TODO Steps for fixing Next.js build error in app/admin/documents/page.tsx
 
-- [x] User approved plan
-- [x] Step 1: Create app/sections/page.tsx with hero, grid of 5 sections from HS_SECTIONS_MAP, aggregate stats
-- [x] Step 2: Test /sections route and navbar link (assumed success post-creation)
-- [x] Step 3: Complete and attempt_completion
+- [x] Step 1: Create TODO.md (done)
+- [x] Step 2: Edit app/admin/documents/page.tsx with all fixes (imports, remove Select block, move functions inside component, cleanup)
+- [x] Step 3: Test build with dev server (Next.js started successfully on port 3001, no parsing error reported)
+- [x] Step 4: Update TODO.md with completion
+- [ ] Step 5: Attempt completion
 

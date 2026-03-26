@@ -10,8 +10,13 @@ declare module "next-auth" {
 
   interface Session {
     id_token?: string
+    sessionId?: string
+    forceLogout?: boolean
     user?: {
+      id?: string
       role?: string
+      hasSubscription?: boolean
+      accessTier?: string
     } & DefaultSession["user"]
   }
 }
@@ -19,6 +24,11 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id_token?: string
+    userId?: string
     role?: string
+    hasSubscription?: boolean
+    accessTier?: string
+    sessionId?: string
+    forceLogout?: boolean
   }
 }

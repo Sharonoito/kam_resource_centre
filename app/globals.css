@@ -18,7 +18,7 @@
   --color-kam-gold: var(--kam-gold);
   --color-kam-gold-pale: var(--kam-gold-pale);
 
-  --font-serif: "Playfair Display", serif;
+  --font-serif: "Poppins", sans-serif;
 }
 
 /* Global body styling */
@@ -26,7 +26,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-dm-sans), ui-sans-serif, system-ui;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui;
 }
 
 /* @import "tailwindcss";

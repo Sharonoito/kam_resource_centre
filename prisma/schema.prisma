@@ -1,40 +1,136 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema", "views"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["customs", "macro_data", "public", "sector", "trade"]
 }
 
-model ataccount {
-  id                 Int       @id @default(autoincrement())
-  acctno             Int
-  oldacctnum         String?   @db.VarChar(20)
-  oldpremnum         String?   @db.VarChar(20)
-  premiseid          Int
-  customerid         Int
-  bill_name          String    @db.VarChar(100)
-  bill_attention     String?   @db.VarChar(50)
-  bill_line1         String    @db.VarChar(100)
-  bill_line2         String?   @db.VarChar(100)
-  bill_city          String    @db.VarChar(50)
-  bill_state         String    @db.Char(2)
-  bill_zip           String    @db.VarChar(10)
-  start_date         DateTime  @db.Timestamp(6)
-  end_date           DateTime? @db.Timestamp(6)
-  last_bill_end_date DateTime? @db.Timestamp(6)
-  last_billed        DateTime  @db.Timestamp(6)
-  current_balance    Decimal   @db.Decimal(9, 2)
-  ytd_usage          Int
-  updated            DateTime  @db.Timestamp(6)
-  updateby           Int
-  directpay          Boolean?
-  ytd_usage_non_pot  Int
-  water_state        Boolean
-  do_not_mail        Boolean
-  onlinepay          Boolean?
-  paperless          Boolean?
+model kam_sector {
+  id          Int              @id @default(autoincrement())
+  name        String           @db.VarChar(100)
+  slug        String           @unique @db.VarChar(100)
+  description String?
+  icon        String?          @db.VarChar(50)
+  color       String?          @db.VarChar(7)
+  is_active   Boolean          @default(true)
+  sort_order  Int              @default(0)
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+  contents    kam_content[]
+  sub_sectors kam_sub_sector[]
+
+  @@schema("public")
+}
+
+model kam_sub_sector {
+  id          Int           @id @default(autoincrement())
+  sector_id   Int
+  name        String        @db.VarChar(100)
+  slug        String        @db.VarChar(100)
+  description String?
+  is_active   Boolean       @default(true)
+  sort_order  Int           @default(0)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  contents    kam_content[]
+  sector      kam_sector    @relation(fields: [sector_id], references: [id])
+
+  @@unique([sector_id, slug])
+  @@schema("public")
+}
+
+model kam_content {
+  id              Int               @id @default(autoincrement())
+  sector_id       Int?
+  sub_sector_id   Int?
+  title           String            @db.VarChar(255)
+  slug            String            @unique @db.VarChar(255)
+  description     String?
+  content_type    ContentType
+  visibility      ContentVisibility @default(PUBLIC)
+  pricing_tier    PricingTier?      @default(FREE)
+  price_kes       Decimal?          @db.Decimal(10, 2)
+  pdf_url         String?           @db.VarChar(500)
+  pdf_size        String?           @db.VarChar(20)
+  powerbi_url     String?           @db.VarChar(500)
+  powerbi_embed   String?
+  db_query_type   String?           @db.VarChar(50)
+  external_url    String?           @db.VarChar(500)
+  tags            String?           @db.VarChar(500)
+  keywords        String?           @db.VarChar(500)
+  author          String?           @db.VarChar(100)
+  published_date  DateTime?
+  is_featured     Boolean           @default(false)
+  is_active       Boolean           @default(true)
+  view_count      Int               @default(0)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  sector_relation kam_sector?       @relation(fields: [sector_id], references: [id])
+  sub_sector      kam_sub_sector?   @relation(fields: [sub_sector_id], references: [id])
+  purchases       Purchase[]
+  resource_logs   resource_log[]
+
+  @@index([sector_id])
+  @@index([sub_sector_id])
+  @@index([content_type])
+  @@index([visibility])
+  @@index([pricing_tier])
+  @@index([is_featured])
+  @@schema("public")
+}
+
+model User {
+  id                 String     @id @default(cuid())
+  email              String     @unique
+  name               String?
+  role               String     @default("PUBLIC")
+  current_session_id String?
+  has_subscription   Boolean    @default(false)
+  created_at         DateTime   @default(now())
+  updated_at         DateTime   @updatedAt
+  adminLogs          AdminLog[]
+  purchases          Purchase[]
+
+  @@map("users")
+  @@schema("public")
+}
+
+model Purchase {
+  id             String         @id @default(cuid())
+  user_id        String
+  content_id     Int
+  mpesa_txn_id   String         @unique
+  amount         Decimal        @db.Decimal(10, 2)
+  status         PurchaseStatus @default(PENDING)
+  download_token String         @unique
+  expires_at     DateTime?
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+  content        kam_content    @relation(fields: [content_id], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("purchases")
+  @@schema("public")
+}
+
+model AdminLog {
+  id         Int      @id @default(autoincrement())
+  user_id    String
+  action     String
+  resource   String?  @db.VarChar(255)
+  details    Json?
+  ip         String?  @db.VarChar(45)
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([action])
+  @@index([created_at])
+  @@schema("public")
 }
 
 model icms_master {
@@ -76,8 +172,23 @@ model icms_master {
   created_at          DateTime? @default(now()) @db.Timestamp(6)
 
   @@unique([entry_number, item_num, version, reg_date, regime])
-  @@unique([entry_number, item_num, version])
+  @@unique([entry_number, item_num, version], map: "idx_icms_identity")
+  @@unique([entry_number, item_num, version], map: "idx_icms_master")
   @@index([year, month])
+  @@schema("customs")
+}
+
+model kam_search_log {
+  id         Int      @id @default(autoincrement())
+  query      String   @db.VarChar(255)
+  results    Int      @default(0)
+  ip_address String?  @db.VarChar(45)
+  user_agent String?  @db.VarChar(500)
+  created_at DateTime @default(now())
+
+  @@index([query])
+  @@index([created_at])
+  @@schema("public")
 }
 
 model icms_insert_errors {
@@ -86,173 +197,620 @@ model icms_insert_errors {
   failed_sql    String?
   chunk_info    Json?
   created_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("public")
 }
 
-// ==========================================
-// KAM Resource Centre - Content Management
-// ==========================================
+model ataccount {
+  id                 Int       @id @default(autoincrement())
+  acctno             Int
+  oldacctnum         String?   @db.VarChar(20)
+  oldpremnum         String?   @db.VarChar(20)
+  premiseid          Int
+  customerid         Int
+  bill_name          String    @db.VarChar(100)
+  bill_attention     String?   @db.VarChar(50)
+  bill_line1         String    @db.VarChar(100)
+  bill_line2         String?   @db.VarChar(100)
+  bill_city          String    @db.VarChar(50)
+  bill_state         String    @db.Char(2)
+  bill_zip           String    @db.VarChar(10)
+  start_date         DateTime  @db.Timestamp(6)
+  end_date           DateTime? @db.Timestamp(6)
+  last_bill_end_date DateTime? @db.Timestamp(6)
+  last_billed        DateTime  @db.Timestamp(6)
+  current_balance    Decimal   @db.Decimal(9, 2)
+  ytd_usage          Int
+  updated            DateTime  @db.Timestamp(6)
+  updateby           Int
+  directpay          Boolean?
+  ytd_usage_non_pot  Int
+  water_state        Boolean
+  do_not_mail        Boolean
+  onlinepay          Boolean?
+  paperless          Boolean?
 
-// Sectors (e.g., Flowers, Agriculture, Manufacturing)
-model kam_sector {
+  @@schema("public")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model document_chunks {
+  id                  Int                   @id @default(autoincrement())
+  document_id         Int
+  chunk_index         Int
+  chunk_text          String
+  page_number         Int?
+  page_number_end     Int?
+  char_start          Int?
+  char_end            Int?
+  token_count         Int?
+  created_at          DateTime?             @default(now()) @db.Timestamp(6)
+  document_embeddings document_embeddings[]
+
+  @@index([document_id, chunk_index], map: "idx_dc_chunk_index")
+  @@index([document_id], map: "idx_dc_document_id")
+  @@index([document_id, page_number], map: "idx_dc_page")
+  @@schema("sector")
+}
+
+model document_downloads {
+  id            Int       @id @default(autoincrement())
+  document_id   Int?
+  downloaded_at DateTime? @default(now()) @db.Timestamp(6)
+  ip_address    String?   @db.VarChar(45)
+  user_agent    String?
+
+  @@index([document_id], map: "idx_dd_document_id")
+  @@schema("sector")
+}
+
+model document_embeddings {
+  id              Int                   @default(autoincrement())
+  chunk_id        Int
+  document_id     Int
+  model_name      String                @db.VarChar(100)
+  model_version   String?               @db.VarChar(50)
+  dimensions      Int                   @default(768)
+  embedding       Unsupported("vector")
+  created_at      DateTime?             @default(now()) @db.Timestamp(6)
+  document_chunks document_chunks       @relation(fields: [chunk_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([chunk_id, model_name])
+  @@index([chunk_id], map: "idx_de_chunk_id")
+  @@index([document_id], map: "idx_de_document_id")
+  @@index([model_name], map: "idx_de_model")
+  @@index([embedding], map: "idx_sector_embeddings_hnsw")
+  @@schema("sector")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model document_ingest_log {
+  id          Int       @default(autoincrement())
+  filename    String?   @db.VarChar(255)
+  status      String    @db.VarChar(20)
+  document_id Int?
+  error_msg   String?
+  ingest_at   DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([status], map: "idx_dil_status")
+  @@ignore
+  @@schema("sector")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model document_pages {
   id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(100)
-  slug        String    @unique @db.VarChar(100)
-  description String?   @db.Text
-  icon        String?   @db.VarChar(50)
-  color       String?   @db.VarChar(7)
-  is_active   Boolean   @default(true)
-  sort_order  Int       @default(0)
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
+  document_id Int
+  page_number Int
+  page_text   String?
+  char_count  Int?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
 
-  contents    kam_content[]
-  sub_sectors kam_sub_sector[]
+  @@index([document_id], map: "idx_dp_document_id")
+  @@index([document_id, page_number], map: "idx_dp_page")
+  @@schema("sector")
 }
 
-// Sub-sectors within a sector
-model kam_sub_sector {
-  id          Int       @id @default(autoincrement())
-  sector_id   Int
-  name        String    @db.VarChar(100)
-  slug        String    @db.VarChar(100)
-  description String?   @db.Text
-  is_active   Boolean   @default(true)
-  sort_order  Int       @default(0)
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model resource_documents {
+  id                      Int       @id @default(autoincrement())
+  title                   String    @db.VarChar(500)
+  sector                  String?   @db.VarChar(100)
+  document_type           String?   @db.VarChar(100)
+  publisher               String?   @default("KAM") @db.VarChar(255)
+  year                    Int?
+  description             String?
+  tags                    String[]
+  file_data               Bytes?
+  filename                String    @db.VarChar(255)
+  original_filename       String?   @db.VarChar(255)
+  was_converted           Boolean?  @default(false)
+  file_size_bytes         Int?
+  mime_type               String?   @default("application/pdf") @db.VarChar(50)
+  sharepoint_file_id      String?   @db.VarChar(255)
+  ingest_source           String?   @default("n8n_sharepoint") @db.VarChar(100)
+  uploaded_by             String?   @default("n8n_workflow") @db.VarChar(255)
+  extraction_status       String?   @default("pending") @db.VarChar(20)
+  extraction_error        String?
+  chunk_count             Int?      @default(0)
+  page_count              Int?      @default(0)
+  extracted_at            DateTime? @db.Timestamp(6)
+  is_published            Boolean?  @default(false)
+  is_active               Boolean?  @default(true)
+  download_count          Int?      @default(0)
+  created_at              DateTime? @default(now()) @db.Timestamp(6)
+  updated_at              DateTime? @default(now()) @db.Timestamp(6)
+  sharepoint_download_url String?
 
-  sector      kam_sector   @relation(fields: [sector_id], references: [id])
-  contents    kam_content[]
-
-  @@unique([sector_id, slug])
+  @@index([document_type], map: "idx_rd_doc_type")
+  @@index([extraction_status], map: "idx_rd_extraction")
+  @@index([is_published, is_active], map: "idx_rd_published")
+  @@index([sector], map: "idx_rd_sector")
+  @@index([sharepoint_file_id], map: "idx_rd_sp_file_id")
+  @@index([tags], map: "idx_rd_tags", type: Gin)
+  @@index([year], map: "idx_rd_year")
+  @@schema("sector")
 }
 
-// Content types
+model ResourceDocuments {
+  id                      Int                         @id @default(autoincrement())
+  title                   String                      @db.VarChar(500)
+  sector                  String?                     @db.VarChar(100)
+  document_type           String?                     @db.VarChar(100)
+  publisher               String?                     @default("KAM") @db.VarChar(255)
+  year                    Int?
+  description             String?
+  tags                    String[]
+  file_data               Bytes?
+  filename                String                      @db.VarChar(255)
+  original_filename       String?                     @db.VarChar(255)
+  was_converted           Boolean?                    @default(false)
+  file_size_bytes         Int?
+  mime_type               String?                     @default("application/pdf") @db.VarChar(50)
+  sharepoint_file_id      String?                     @unique @db.VarChar(255)
+  ingest_source           String?                     @default("n8n_sharepoint") @db.VarChar(100)
+  uploaded_by             String?                     @default("n8n_workflow") @db.VarChar(255)
+  extraction_status       String?                     @default("pending") @db.VarChar(20)
+  extraction_error        String?
+  chunk_count             Int?                        @default(0)
+  page_count              Int?                        @default(0)
+  extracted_at            DateTime?                   @db.Timestamp(6)
+  is_published            Boolean?                    @default(false)
+  is_active               Boolean?                    @default(true)
+  download_count          Int?                        @default(0)
+  created_at              DateTime?                   @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                   @default(now()) @db.Timestamp(6)
+  sharepoint_download_url String?
+  folder_category         String?                     @db.VarChar(255)
+  document_chunks         trade_document_chunks[]
+  document_downloads      trade_document_downloads[]
+  document_embeddings     trade_document_embeddings[]
+  document_ingest_log     trade_document_ingest_log[]
+  document_pages          trade_document_pages[]
+
+  @@index([document_type], map: "idx_rd_doc_type")
+  @@index([extraction_status], map: "idx_rd_extraction")
+  @@index([is_published, is_active], map: "idx_rd_published")
+  @@index([sector], map: "idx_rd_sector")
+  @@index([sharepoint_file_id], map: "idx_rd_sp_file_id")
+  @@index([tags], map: "idx_rd_tags", type: Gin)
+  @@index([year], map: "idx_rd_year")
+  @@map("resource_documents")
+  @@schema("trade")
+}
+
+model resource_log {
+  id          Int         @id @default(autoincrement())
+  resource_id Int
+  action_type String
+  created_at  DateTime    @default(now()) @db.Timestamp(6)
+  content     kam_content @relation(fields: [resource_id], references: [id])
+
+  @@schema("sector")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model debt {
+  id             BigInt   @id @default(autoincrement())
+  country_iso3   String   @db.Char(3)
+  country_name   String
+  year           Int      @db.SmallInt
+  value          Decimal? @db.Decimal(20, 6)
+  indicator_code String
+  indicator_name String?
+  source         String?
+  is_projection  Boolean  @default(false)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([indicator_code, country_iso3, year])
+  @@index([indicator_code], map: "ix_debt_indicator")
+  @@index([country_iso3], map: "ix_debt_iso3")
+  @@index([year], map: "ix_debt_year")
+  @@schema("macro_data")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model exchange_rates {
+  id              BigInt   @id @default(autoincrement())
+  date            DateTime @db.Date
+  base_currency   String   @db.Char(3)
+  target_currency String   @db.Char(3)
+  rate            Decimal  @db.Decimal(20, 8)
+  source          String?
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([date, base_currency, target_currency])
+  @@index([date], map: "ix_er_date")
+  @@index([date, target_currency], map: "ix_er_date_target")
+  @@index([target_currency], map: "ix_er_target")
+  @@schema("macro_data")
+}
+
+model indicators {
+  id             BigInt   @default(autoincrement())
+  indicator_code String
+  indicator_name String?
+  country_iso2   String?
+  country_iso3   String
+  country_name   String?
+  year           Int
+  value          Decimal? @db.Decimal
+  unit           String?
+  obs_status     String?
+  inserted_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([indicator_code, country_iso3, year], map: "pk_macro_data_indicators")
+  @@index([country_iso3], map: "idx_wb_country")
+  @@index([country_iso3, year], map: "idx_wb_country_year")
+  @@index([indicator_code], map: "idx_wb_indicator")
+  @@index([year], map: "idx_wb_year")
+  @@schema("macro_data")
+}
+
+model inflation {
+  id             BigInt   @default(autoincrement())
+  country_iso3   String
+  country_name   String?
+  year           Int
+  value          Decimal? @db.Decimal
+  indicator_code String?  @default("PCPIPCH")
+  indicator_name String?  @default("Inflation rate, average consumer prices (annual %)")
+  source         String?
+  is_projection  Boolean? @default(false)
+  inserted_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([country_iso3, year], map: "pk_macro_data_inflation")
+  @@index([country_iso3], map: "idx_imf_country")
+  @@index([year], map: "idx_imf_year")
+  @@schema("macro_data")
+}
+
+model ingest_errors {
+  id            BigInt    @id @default(autoincrement())
+  error_message String?
+  failed_sql    String?
+  chunk_info    Json?
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("macro_data")
+}
+
+model ingest_errors_debt {
+  id            BigInt   @id @default(autoincrement())
+  error_message String?
+  failed_sql    String?
+  chunk_info    Json?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@schema("macro_data")
+}
+
+model ingest_errors_inflation {
+  id            BigInt    @id @default(autoincrement())
+  error_message String?
+  failed_sql    String?
+  chunk_info    Json?
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("macro_data")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model trade_document_chunks {
+  id                  Int                         @id @default(autoincrement())
+  document_id         Int
+  chunk_index         Int
+  chunk_text          String
+  page_number         Int?
+  page_number_end     Int?
+  char_start          Int?
+  char_end            Int?
+  token_count         Int?
+  created_at          DateTime?                   @default(now()) @db.Timestamp(6)
+  resource_documents  ResourceDocuments           @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  document_embeddings trade_document_embeddings[]
+
+  @@unique([document_id, chunk_index])
+  @@index([document_id, chunk_index], map: "idx_dc_chunk_index")
+  @@index([document_id], map: "idx_dc_document_id")
+  @@index([document_id, page_number], map: "idx_dc_page")
+  @@map("document_chunks")
+  @@schema("trade")
+}
+
+model trade_document_downloads {
+  id                 Int                @id @default(autoincrement())
+  document_id        Int?
+  downloaded_at      DateTime?          @default(now()) @db.Timestamp(6)
+  ip_address         String?            @db.VarChar(45)
+  user_agent         String?
+  resource_documents ResourceDocuments? @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([document_id], map: "idx_dd_document_id")
+  @@map("document_downloads")
+  @@schema("trade")
+}
+
+model trade_document_embeddings {
+  id                 Int                   @id(map: "trade_document_embeddings_pkey") @default(autoincrement())
+  chunk_id           Int
+  document_id        Int
+  model_name         String                @db.VarChar(100)
+  model_version      String?               @db.VarChar(50)
+  dimensions         Int                   @default(768)
+  embedding          Unsupported("vector")
+  created_at         DateTime?             @default(now()) @db.Timestamp(6)
+  document_chunks    trade_document_chunks @relation(fields: [chunk_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "trade_document_embeddings_chunk_id_fkey")
+  resource_documents ResourceDocuments     @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "trade_document_embeddings_document_id_fkey")
+
+  @@unique([chunk_id, model_name], map: "trade_document_embeddings_chunk_id_model_name_key")
+  @@index([chunk_id], map: "idx_trade_de_chunk_id")
+  @@index([document_id], map: "idx_trade_de_document_id")
+  @@index([model_name], map: "idx_trade_de_model")
+  @@index([embedding], map: "idx_trade_embeddings_hnsw")
+  @@map("document_embeddings")
+  @@schema("trade")
+}
+
+model trade_document_ingest_log {
+  id                 Int                @id @default(autoincrement())
+  filename           String?            @db.VarChar(255)
+  status             String             @db.VarChar(20)
+  document_id        Int?
+  error_msg          String?
+  ingest_at          DateTime?          @default(now()) @db.Timestamp(6)
+  resource_documents ResourceDocuments? @relation(fields: [document_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([status], map: "idx_dil_status")
+  @@map("document_ingest_log")
+  @@schema("trade")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model trade_document_pages {
+  id                 Int               @id @default(autoincrement())
+  document_id        Int
+  page_number        Int
+  page_text          String?
+  char_count         Int?
+  created_at         DateTime?         @default(now()) @db.Timestamp(6)
+  resource_documents ResourceDocuments @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([document_id, page_number])
+  @@index([document_id], map: "idx_dp_document_id")
+  @@index([document_id, page_number], map: "idx_dp_page")
+  @@map("document_pages")
+  @@schema("trade")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view v_chunks_with_metadata {
+  chunk_id       Int?
+  document_id    Int?
+  chunk_index    Int?
+  chunk_text     String?
+  page_number    Int?
+  token_count    Int?
+  document_title String? @db.VarChar(500)
+  sector         String? @db.VarChar(100)
+  document_type  String? @db.VarChar(100)
+  publisher      String? @db.VarChar(255)
+  year           Int?
+  filename       String? @db.VarChar(255)
+  download_url   String?
+
+  @@ignore
+  @@schema("sector")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view v_documents_public {
+  id                Int?
+  title             String?   @db.VarChar(500)
+  sector            String?   @db.VarChar(100)
+  document_type     String?   @db.VarChar(100)
+  publisher         String?   @db.VarChar(255)
+  year              Int?
+  description       String?
+  tags              String[]
+  filename          String?   @db.VarChar(255)
+  file_size_bytes   Int?
+  was_converted     Boolean?
+  download_count    Int?
+  extraction_status String?   @db.VarChar(20)
+  chunk_count       Int?
+  page_count        Int?
+  created_at        DateTime? @db.Timestamp(6)
+  download_url      String?
+
+  @@ignore
+  @@schema("sector")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view v_embedding_coverage {
+  document_id     Int?
+  title           String?  @db.VarChar(500)
+  sector          String?  @db.VarChar(100)
+  total_chunks    Int?
+  model_name      String?  @db.VarChar(100)
+  embedded_chunks BigInt?
+  pending_chunks  BigInt?
+  pct_complete    Decimal? @db.Decimal
+
+  @@ignore
+  @@schema("sector")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view africa_latest {
+  indicator_code String?
+  indicator_name String?
+  country_iso3   String?
+  country_name   String?
+  year           Int?
+  value          Decimal? @db.Decimal
+  unit           String?
+
+  @@ignore
+  @@schema("macro_data")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view inflation_projections {
+  country_iso3 String?
+  country_name String?
+  year         Int?
+  value        Decimal?  @db.Decimal
+  source       String?
+  updated_at   DateTime? @db.Timestamptz(6)
+
+  @@ignore
+  @@schema("macro_data")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view kenya_indicators {
+  indicator_code String?
+  indicator_name String?
+  year           Int?
+  value          Decimal? @db.Decimal
+  unit           String?
+
+  @@ignore
+  @@schema("macro_data")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+/// This view or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+view v_inflation_comparison {
+  country_iso3  String?
+  country_name  String?
+  year          Int?
+  wb_cpi_pct    Decimal? @db.Decimal
+  imf_weo_pct   Decimal? @db.Decimal
+  is_projection Boolean?
+
+  @@ignore
+  @@schema("macro_data")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view kenya_inflation {
+  year          Int?
+  inflation_pct Decimal?  @db.Decimal
+  is_projection Boolean?
+  source        String?
+  updated_at    DateTime? @db.Timestamptz(6)
+
+  @@ignore
+  @@schema("macro_data")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view africa_latest_inflation {
+  country_iso3  String?
+  country_name  String?
+  year          Int?
+  inflation_pct Decimal? @db.Decimal
+  is_projection Boolean?
+  source        String?
+
+  @@ignore
+  @@schema("macro_data")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view inflation_historical {
+  country_iso3 String?
+  country_name String?
+  year         Int?
+  value        Decimal?  @db.Decimal
+  source       String?
+  updated_at   DateTime? @db.Timestamptz(6)
+
+  @@ignore
+  @@schema("macro_data")
+}
+
+view v_documents_admin {
+  id                 Int       @id
+  title              String?   @db.VarChar(500)
+  sector             String?   @db.VarChar(100)
+  document_type      String?   @db.VarChar(100)
+  publisher          String?   @db.VarChar(255)
+  year               Int?
+  filename           String?   @db.VarChar(255)
+  original_filename  String?   @db.VarChar(255)
+  was_converted      Boolean?
+  file_size_bytes    Int?
+  sharepoint_file_id String?   @db.VarChar(255)
+  extraction_status  String?   @db.VarChar(20)
+  chunk_count        Int?
+  page_count         Int?
+  extracted_at       DateTime? @db.Timestamp(6)
+  is_published       Boolean?
+  is_active          Boolean?
+  download_count     Int?
+  created_at         DateTime? @db.Timestamp(6)
+  updated_at         DateTime? @db.Timestamp(6)
+  download_url       String?
+
+  @@schema("sector")
+}
+
 enum ContentType {
   PDF
   POWERBI
   DATABASE
   LINK
+
+  @@schema("public")
 }
 
-// Content visibility
 enum ContentVisibility {
   PUBLIC
   MEMBER
   ADMIN
+
+  @@schema("public")
 }
 
-// Pricing tiers for monetization
 enum PricingTier {
   FREE
   MEMBER_ONLY
   PAID
+
+  @@schema("public")
 }
 
-// Purchase status
 enum PurchaseStatus {
   PENDING
   PAID
   EXPIRED
   DOWNLOADED
-}
 
-// Main content model - stores all resources (PDFs, Power BI, Database exports)
-model kam_content {
-  id              Int               @id @default(autoincrement())
-  sector_id       Int?
-  sub_sector_id   Int?
-  
-  title           String            @db.VarChar(255)
-  slug            String            @unique @db.VarChar(255)
-  description     String?           @db.Text
-  content_type    ContentType
-  visibility      ContentVisibility @default(PUBLIC)
-  pricing_tier    PricingTier?      @default(FREE)
-  price_kes       Decimal?          @db.Decimal(10,2)
-  
-  // For PDF
-  pdf_url         String?           @db.VarChar(500)
-  pdf_size        String?           @db.VarChar(20)
-  
-  // For Power BI
-  powerbi_url     String?           @db.VarChar(500)
-  powerbi_embed   String?           @db.Text
-  
-  // For Database
-  db_query_type   String?           @db.VarChar(50)
-  
-  // For external links
-  external_url    String?           @db.VarChar(500)
-  
-  // Metadata
-  tags            String?           @db.VarChar(500)
-  keywords        String?           @db.VarChar(500)
-  author          String?           @db.VarChar(100)
-  published_date  DateTime?
-  
-  // Status
-  is_featured     Boolean           @default(false)
-  is_active       Boolean           @default(true)
-  view_count      Int               @default(0)
-  
-  created_at      DateTime          @default(now())
-  updated_at      DateTime          @updatedAt
-
-  sector          kam_sector?       @relation(fields: [sector_id], references: [id])
-  sub_sector      kam_sub_sector?   @relation(fields: [sub_sector_id], references: [id])
-  purchases       Purchase[]
-
-  @@index([sector_id])
-  @@index([sub_sector_id])
-  @@index([content_type])
-  @@index([visibility])
-  @@index([pricing_tier])
-  @@index([is_featured])
-}
-
-// Search history for analytics
-model kam_search_log {
-  id          Int       @id @default(autoincrement())
-  query       String    @db.VarChar(255)
-  results     Int       @default(0)
-  ip_address  String?   @db.VarChar(45)
-  user_agent  String?   @db.VarChar(500)
-  created_at  DateTime  @default(now())
-
-  @@index([query])
-  @@index([created_at])
-}
-
-// Users - linked to NextAuth/Keycloak accounts
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      String   @default("PUBLIC") // SUPERADMIN | MEMBER | PUBLIC
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  purchases Purchase[]
-
-  @@map("users")
-}
-
-// Purchases - track paid downloads
-model Purchase {
-  id             String         @id @default(cuid())
-  user_id        String
-  content_id     Int
-  mpesa_txn_id   String         @unique
-  amount         Decimal        @db.Decimal(10,2)
-  status         PurchaseStatus @default(PENDING)
-  download_token String         @unique
-  expires_at     DateTime?
-  created_at     DateTime       @default(now())
-  updated_at     DateTime       @updatedAt
-
-  user           User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  content        kam_content    @relation(fields: [content_id], references: [id], onDelete: Cascade)
-
-  @@map("purchases")
+  @@schema("public")
 }

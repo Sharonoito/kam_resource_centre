@@ -1,0 +1,319 @@
+// types/sectors.ts
+
+export interface HsSection {
+  id: string;          // Roman numeral, e.g. "I", "VIII"
+  name: string;
+  path: string;        // Route slug, e.g. "/sections/i-live-animals"
+  description: string;
+}
+
+export interface KamSector {
+  id: number;
+  name: string;
+  slug: string;        // Added for Next.js routing
+  emoji: string;       // For the visual grid
+  color: string;       // For background accents
+  sections: string[];
+  hsChapters: string;
+  sectionsData: HsSection[];
+}
+
+/** Full catalogue of all 21 HS Sections (shared reference). */
+export const HS_SECTIONS: Record<string, HsSection> = {
+  I:    { id: "I",    name: "Live Animals & Products",  path: "/sections/i-live-animals",       description: "Animals and animal products" },
+  II:   { id: "II",   name: "Vegetable Products",       path: "/sections/ii-vegetable-products", description: "Agricultural and plant goods" },
+  III:  { id: "III",  name: "Fats and Oils",            path: "/sections/iii-fats-oils",         description: "Animal and vegetable oils" },
+  IV:   { id: "IV",   name: "Prepared Foodstuffs",      path: "/sections/iv-prepared-food",      description: "Processed food and beverages" },
+  V:    { id: "V",    name: "Mineral Products",         path: "/sections/v-mineral-products",    description: "Petroleum, minerals and fuels" },
+  VI:   { id: "VI",   name: "Chemical Products",        path: "/sections/vi-chemicals",          description: "Industrial and organic chemicals" },
+  VII:  { id: "VII",  name: "Plastics & Rubber",        path: "/sections/vii-plastics-rubber",   description: "Polymer and rubber materials" },
+  VIII: { id: "VIII", name: "Leather Goods",            path: "/sections/viii-leather",          description: "Leather and animal hides (Ch. 41-43)" },
+  IX:   { id: "IX",   name: "Wood Articles",            path: "/sections/ix-wood",               description: "Timber and wood products" },
+  X:    { id: "X",    name: "Paper & Pulp",             path: "/sections/x-paper",               description: "Paper manufacturing materials" },
+  XI:   { id: "XI",   name: "Textiles",                 path: "/sections/xi-textiles",           description: "Clothing and fabric materials" },
+  XII:  { id: "XII",  name: "Footwear",                 path: "/sections/xii-footwear",          description: "Shoes and footwear products (Ch. 64)" },
+  XIII: { id: "XIII", name: "Stone & Glass",            path: "/sections/xiii-stone-ceramic",    description: "Ceramics, cement and glass" },
+  XIV:  { id: "XIV",  name: "Precious Items",           path: "/sections/xiv-pearls",            description: "Pearls, gems and jewellery" },
+  XV:   { id: "XV",   name: "Base Metals",              path: "/sections/xv-base-metals",        description: "Iron, steel and metal goods" },
+  XVI:  { id: "XVI",  name: "Machinery",                path: "/sections/xvi-machinery",         description: "Industrial machinery and equipment" },
+  XVII: { id: "XVII", name: "Transport",                path: "/sections/xvii-transport",        description: "Vehicles and transport equipment" },
+  XVIII:{ id: "XVIII",name: "Optical / Medical",        path: "/sections/xviii-optical-medical", description: "Medical and optical instruments" },
+  XIX:  { id: "XIX",  name: "Arms & Ammo",              path: "/sections/xix-arms",              description: "Weapons and ammunition" },
+  XX:   { id: "XX",   name: "Misc Items",               path: "/sections/xx-miscellaneous",      description: "Various manufactured goods" },
+  XXI:  { id: "XXI",  name: "Art & Antiques",           path: "/sections/xxi-art-antiques",      description: "Artworks and antiques" },
+};
+
+const s = HS_SECTIONS; // shorthand for sector definitions below
+
+export const KAM_SECTORS: KamSector[] = [
+  { 
+    id: 1, 
+    name: "Agriculture and Food Processing", 
+    slug: "agriculture",
+    emoji: "🌾",
+    color: "#10b981",
+    sections: ["Live Animals", "Vegetable Products", "Fats and Oils", "Prepared Foodstuffs"],
+    hsChapters: "1-24",
+    sectionsData: [s.I, s.II, s.III, s.IV],
+  },
+  { 
+    id: 2, 
+    name: "Food and Beverages", 
+    slug: "food-beverages",
+    emoji: "🍷",
+    color: "#f59e0b",
+    sections: ["Prepared Foodstuffs"],
+    hsChapters: "21-22",
+    sectionsData: [s.IV],
+  },
+  { 
+    id: 3, 
+    name: "Timber Sector", 
+    slug: "timber",
+    emoji: "🪵",
+    color: "#846046",
+    sections: ["Wood and Articles of Wood"],
+    hsChapters: "44-46",
+    sectionsData: [s.IX],
+  },
+  { 
+    id: 4, 
+    name: "Leather and Footwear", 
+    slug: "leather",
+    emoji: "👞",
+    color: "#b45309",
+    sections: ["Raw Hides", "Skins", "Leather", "Footwear"],
+    hsChapters: "41-43, 64",
+    sectionsData: [s.VIII, s.XII],
+  },
+  { 
+    id: 5, 
+    name: "Textiles and Apparel", 
+    slug: "textiles",
+    emoji: "👕",
+    color: "#3b82f6",
+    sections: ["Textiles and Textile Articles"],
+    hsChapters: "50-63",
+    sectionsData: [s.XI],
+  },
+  { 
+    id: 6, 
+    name: "Plastics and Rubber", 
+    slug: "plastics",
+    emoji: "🧪",
+    color: "#ec4899",
+    sections: ["Plastics and Rubber"],
+    hsChapters: "39-40",
+    sectionsData: [s.VII],
+  },
+  { 
+    id: 7, 
+    name: "Pharmaceutical Sector", 
+    slug: "pharmaceutical",
+    emoji: "💊",
+    color: "#ef4444",
+    sections: ["Chemical Products", "Optical", "Medical Instruments"],
+    hsChapters: "30, 90",
+    sectionsData: [s.VI, s.XVIII],
+  },
+  { 
+    id: 8, 
+    name: "Paper Sector", 
+    slug: "paper",
+    emoji: "📄",
+    color: "#6b7280",
+    sections: ["Pulp", "Paper and Paperboard"],
+    hsChapters: "47-49",
+    sectionsData: [s.X],
+  },
+  { 
+    id: 9, 
+    name: "Metal and Allied", 
+    slug: "metal",
+    emoji: "🏗️",
+    color: "#4b5563",
+    sections: ["Base Metals and Articles of Base Metal"],
+    hsChapters: "72-83",
+    sectionsData: [s.XV],
+  },
+  { 
+    id: 10, 
+    name: "Chemicals and Allied", 
+    slug: "chemicals",
+    emoji: "⚗️",
+    color: "#8b5cf6",
+    sections: ["Chemical Products"],
+    hsChapters: "28-38",
+    sectionsData: [s.VI],
+  },
+  { 
+    id: 11, 
+    name: "Energy and Electricals", 
+    slug: "energy",
+    emoji: "⚡",
+    color: "#facc15",
+    sections: ["Machinery", "Mechanical Appliances", "Electrical Equipment"],
+    hsChapters: "27, 83-85",
+    sectionsData: [s.V, s.XVI],
+  },
+  { 
+    id: 12, 
+    name: "Building, Mining and Construction", 
+    slug: "construction",
+    emoji: "🧱",
+    color: "#fb923c",
+    sections: ["Mineral Products", "Stone", "Plaster", "Cement", "Glassware"],
+    hsChapters: "25-26, 68-70, 78",
+    sectionsData: [s.V, s.XIII, s.XV],
+  },
+  { 
+    id: 13, 
+    name: "Automotive Sector", 
+    slug: "automotive",
+    emoji: "🚗",
+    color: "#1e293b",
+    sections: ["Vehicles", "Aircraft", "Vessels", "Transport Equipment"],
+    hsChapters: "87",
+    sectionsData: [s.XVII],
+  },
+];
+
+/**
+ * Maps raw database sector strings to official KAM IDs
+ */
+export const mapDbSectorToId = (dbSector: string | null | undefined): number | null => {
+  if (!dbSector) return null;
+  
+  const sector = dbSector.toLowerCase();
+  
+  if (sector.includes("sugar") || sector.includes("agriculture")) return 1;
+  if (sector.includes("food") || sector.includes("beverage")) return 2;
+  if (sector.includes("timber")) return 3;
+  if (sector.includes("leather")) return 4;
+  if (sector.includes("automotive")) return 13;
+  if (sector.includes("general")) return 0; 
+  
+  return null;
+};
+
+// // types/sectors.ts
+
+// export interface KamSector {
+//   id: number;
+//   name: string;
+//   icon: string;
+//   sections: string[];
+//   hsChapters?: string;
+// }
+
+// export const KAM_SECTORS: KamSector[] = [
+//   { 
+//     id: 1, 
+//     name: "Agriculture and Food Processing", 
+//     icon: "agriculture", 
+//     sections: ["Live Animals", "Vegetable Products", "Fats and Oils", "Prepared Foodstuffs"],
+//     hsChapters: "1-15"
+//   },
+//   { 
+//     id: 2, 
+//     name: "Food and Beverages", 
+//     icon: "restaurant", 
+//     sections: ["Prepared Foodstuffs"],
+//     hsChapters: "21-22"
+//   },
+//   { 
+//     id: 3, 
+//     name: "Timber Sector", 
+//     icon: "forest", 
+//     sections: ["Wood and Articles of Wood"],
+//     hsChapters: "44-46"
+//   },
+//   { 
+//     id: 4, 
+//     name: "Leather and Footwear", 
+//     icon: "shopping_bag", 
+//     sections: ["Raw Hides", "Skins", "Leather", "Footwear"],
+//     hsChapters: "41-43, 64"
+//   },
+//   { 
+//     id: 5, 
+//     name: "Textiles and Apparel", 
+//     icon: "checkroom", 
+//     sections: ["Textiles and Textile Articles"],
+//     hsChapters: "50-63"
+//   },
+//   { 
+//     id: 6, 
+//     name: "Plastics and Rubber", 
+//     icon: "layers", 
+//     sections: ["Plastics and Rubber"],
+//     hsChapters: "39-40"
+//   },
+//   { 
+//     id: 7, 
+//     name: "Pharmaceutical Sector", 
+//     icon: "medication", 
+//     sections: ["Chemical Products", "Optical", "Medical Instruments"],
+//     hsChapters: "30, 90"
+//   },
+//   { 
+//     id: 8, 
+//     name: "Paper Sector", 
+//     icon: "description", 
+//     sections: ["Pulp", "Paper and Paperboard"],
+//     hsChapters: "47-49"
+//   },
+//   { 
+//     id: 9, 
+//     name: "Metal and Allied", 
+//     icon: "construction", 
+//     sections: ["Base Metals and Articles of Base Metal"],
+//     hsChapters: "72-83"
+//   },
+//   { 
+//     id: 10, 
+//     name: "Chemicals and Allied", 
+//     icon: "science", 
+//     sections: ["Chemical Products"],
+//     hsChapters: "28-38"
+//   },
+//   { 
+//     id: 11, 
+//     name: "Energy and Electricals", 
+//     icon: "bolt", 
+//     sections: ["Machinery", "Mechanical Appliances", "Electrical Equipment"],
+//     hsChapters: "27, 83-85"
+//   },
+//   { 
+//     id: 12, 
+//     name: "Building, Mining and Construction", 
+//     icon: "apartment", 
+//     sections: ["Mineral Products", "Stone", "Plaster", "Cement", "Glassware"],
+//     hsChapters: "25-26, 68-70, 78"
+//   },
+//   { 
+//     id: 13, 
+//     name: "Automotive Sector", 
+//     icon: "directions_car", 
+//     sections: ["Vehicles", "Aircraft", "Vessels", "Transport Equipment"],
+//     hsChapters: "87"
+//   }
+// ];
+
+// /**
+//  * Maps raw database sector strings to official KAM IDs
+//  */
+// export const mapDbSectorToId = (dbSector: string | null | undefined): number | null => {
+//   if (!dbSector) return null;
+  
+//   const sector = dbSector.toLowerCase();
+  
+//   if (sector.includes("sugar") || sector.includes("agriculture")) return 1;
+//   if (sector.includes("food") || sector.includes("beverage")) return 2;
+//   if (sector.includes("timber")) return 3;
+//   if (sector.includes("leather")) return 4;
+//   if (sector.includes("automotive")) return 13;
+//   if (sector.includes("general")) return 0; // Internal reference for general docs
+  
+//   return null;
+// };

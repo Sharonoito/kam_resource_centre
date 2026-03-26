@@ -1,4 +1,4 @@
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Playfair_Display, DM_Sans, Poppins } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
@@ -16,6 +16,12 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans",
 });
 
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
+});
+
 export const metadata: Metadata = {
   title: "KAM Resource Centre",
   description: "Empowering Kenyan manufacturers through data-driven intelligence.",
@@ -23,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${poppins.variable}`}>
       <body className="font-sans antialiased bg-white text-gray-900">
         <Providers>
           <Navbar />

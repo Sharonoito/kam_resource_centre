@@ -7,112 +7,67 @@ interface Props {
   params: Promise<{ slug: string; id: string }>;
 }
 
-// Dummy data structure - replace with real Prisma query
-const dummyTradeRecords = [
-  {
-    id: 1,
-    hsCode: '0101.21.00',
-    description: 'Pure-bred breeding horses',
-    date: '2024-03-15',
-    origin: 'United Kingdom',
-    destination: 'Kenya',
-    quantity: '12 heads',
-    fobValue: 'KES 4,560,000',
-    cifValue: 'KES 5,234,000',
-    dutyPaid: 'KES 523,400',
-    trader: 'Equine Imports Ltd',
-    documents: 3
-  },
-  {
-    id: 2,
-    hsCode: '0106.31.00',
-    description: 'Live chickens weighing not more than 185g',
-    date: '2024-03-14',
-    origin: 'Brazil',
-    destination: 'Kenya',
-    quantity: '25,000 birds',
-    fobValue: 'KES 12,500,000',
-    cifValue: 'KES 14,250,000',
-    dutyPaid: 'KES 1,425,000',
-    trader: 'Poultry International KE',
-    documents: 2
-  },
-  {
-    id: 3,
-    hsCode: '0201.10.00',
-    description: 'Carcasses and half-carcasses of bovine animals, fresh or chilled',
-    date: '2024-03-13',
-    origin: 'Ethiopia',
-    destination: 'Kenya',
-    quantity: '8.5 MT',
-    fobValue: 'KES 3,200,000',
-    cifValue: 'KES 3,520,000',
-    dutyPaid: 'KES 352,000',
-    trader: 'East Africa Meat Packers',
-    documents: 4
-  },
-  {
-    id: 4,
-    hsCode: '0406.90.10',
-    description: 'Fresh (unripened or unripe) cheese',
-    date: '2024-03-12',
-    origin: 'Netherlands',
-    destination: 'Kenya',
-    quantity: '2,400 kg',
-    fobValue: 'KES 1,680,000',
-    cifValue: 'KES 1,848,000',
-    dutyPaid: 'KES 184,800',
-    trader: 'Dairy Global Traders',
-    documents: 2
-  },
-  {
-    id: 5,
-    hsCode: '0502.10.00',
-    description: 'Dry glands of animals',
-    date: '2024-03-10',
-    origin: 'India',
-    destination: 'Kenya',
-    quantity: '450 kg',
-    fobValue: 'KES 720,000',
-    cifValue: 'KES 756,000',
-    dutyPaid: 'KES 75,600',
-    trader: 'Pharma Raw Materials Ltd',
-    documents: 3
-  },
-  {
-    id: 6,
-    hsCode: '0101.29.90',
-    description: 'Other horses, live',
-    date: '2024-03-08',
-    origin: 'United Arab Emirates',
-    destination: 'Kenya',
-    quantity: '5 heads',
-    fobValue: 'KES 2,250,000',
-    cifValue: 'KES 2,475,000',
-    dutyPaid: 'KES 247,500',
-    trader: 'Desert Horse Imports',
-    documents: 2
-  }
-];
-
 async function getSectionData(slug: string, id: string) {
-  // Real implementation would query Prisma based on slug/id
-  // For now return dummy data filtered by section
-  const sectionData = dummyTradeRecords.filter(record => 
-    record.hsCode.startsWith('01') || record.hsCode.startsWith('02') || 
-    record.hsCode.startsWith('03') || record.hsCode.startsWith('04') || 
-    record.hsCode.startsWith('05')
-  );
-  
-  return {
-    title: 'Live Animals & Products - Trade Declarations Database',
-    sectionSlug: slug,
-    databaseId: id,
-    totalRecords: sectionData.length,
-    records: sectionData,
-    lastUpdated: '2024-03-16',
-    exportFormats: ['CSV', 'Excel', 'PDF']
-  };
+  try {
+    // Query real data from Prisma - filter by HS chapter matching slug (e.g., '01', '02')
+    const records = await prisma.icms_master.findMany({
+      where: {
+        hs_chapter: slug.toUpperCase(),
+      },
+      take: 20, // Limit for performance
+      orderBy: {
+        reg_date: 'desc',
+      },
+      select: {
+        id: true,
+        hscode: true,
+        good_description: true,
+        reg_date: true,
+        origin_country: true,
+        country_name: true,
+        quantity: true,
+        fob_value: true,
+        import_duty: true,
+        entry_number: true,
+      },
+    });
+
+    // Map DB fields to UI format
+    const uiRecords = records.map((record) => ({
+      id: record.id,
+      hsCode: record.hscode || 'N/A',
+      description: record.good_description || 'No description',
+      date: record.reg_date?.split(' ')[0] || 'N/A',
+      origin: record.origin_country || 'N/A',
+      destination: record.country_name || 'Kenya',
+      quantity: record.quantity?.toString() || 'N/A',
+      fobValue: record.fob_value ? `KES ${Math.round(record.fob_value).toLocaleString()}` : 'N/A',
+      dutyPaid: record.import_duty ? `KES ${Math.round(record.import_duty).toLocaleString()}` : 'N/A',
+      trader: record.entry_number || 'N/A',
+      documents: 2, // Static for now
+    }));
+
+    return {
+      title: `${slug.toUpperCase()} - Live Trade Declarations Database`,
+      sectionSlug: slug,
+      databaseId: id,
+      totalRecords: records.length,
+      records: uiRecords,
+      lastUpdated: records[0]?.reg_date ? new Date(records[0].reg_date).toISOString().split('T')[0] : 'No data',
+      exportFormats: ['CSV', 'Excel', 'PDF'],
+    };
+  } catch (error) {
+    console.error('Database query error:', error);
+    return {
+      title: `${slug.toUpperCase()} - Trade Declarations Database`,
+      sectionSlug: slug,
+      databaseId: id,
+      totalRecords: 0,
+      records: [],
+      lastUpdated: 'Error loading data',
+      exportFormats: ['CSV', 'Excel', 'PDF'],
+    };
+  }
 }
 
 export default async function SectionDataPage({ params }: Props) {

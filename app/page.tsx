@@ -102,11 +102,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-gray-800 relative overflow-hidden font-sans">
       
-      {/* LANGUAGE TOGGLE */}
-      <div className="fixed top-24 right-6 z-50 flex flex-col gap-2">
-        <button onClick={() => setLang("en")} className={`px-3 py-1 rounded shadow-lg text-xs font-bold transition ${lang === 'en' ? 'bg-[#193C8D] text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>EN</button>
-        <button onClick={() => setLang("sw")} className={`px-3 py-1 rounded shadow-lg text-xs font-bold transition ${lang === 'sw' ? 'bg-[#193C8D] text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>SW</button>
-      </div>
+      {/* LANGUAGE TOGGLE - REMOVED */}
 
       {/* Subtle African Pattern Background */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "url('/images/african-pattern.png')" }} />
@@ -148,97 +144,49 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============================================ */}
-      {/* NEW: SECTORS SECTION - Prominent & Easy Access */}
-      {/* ============================================ */}
-      <section id="sectors" className="py-20 bg-gradient-to-br from-[#0B1E3A] to-[#193C8D] relative overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/african-pattern.png')]" />
+
+            {/* ABOUT SECTION - MOVED TO TOP OF PILLARS */}
+      <section id="about" className="py-24 z-10 relative overflow-hidden bg-white">
+        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 text-[20rem] font-serif font-black text-zinc-50 opacity-[0.03] select-none">
+          KAM
         </div>
-        
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1 bg-[#E7B947] text-[#0B1E3A] text-xs font-bold uppercase tracking-widest rounded-full mb-4">
-              Quick Access
-            </span>
-            <h2 className="text-3xl lg:text-4xl font-serif font-bold text-white mb-4">
-              {t.sectorsTitle}
+
+        <div className="container mx-auto px-6 max-w-5xl relative">
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-1 bg-[#E7B947] mb-10 rounded-full"></div>
+            
+            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-[#0B1E3A] mb-8 text-center leading-tight">
+              {t.aboutTitle}
             </h2>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              {t.sectorsDesc}
-            </p>
-          </div>
+            
+            <div className="relative">
+              <span className="absolute -top-10 -left-10 text-8xl text-[#E7B947]/20 font-serif">"</span>
+              
+              <p className="text-gray-600 leading-relaxed text-xl lg:text-2xl font-light italic text-center max-w-4xl mx-auto">
+                {t.aboutDesc}
+              </p>
 
-          {/* Sectors Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-10">
-            {sectors.map((sector, index) => (
-              <Link
-                key={sector.slug}
-                href={`/sectors/${sector.slug}`}
-                className="group bg-white/10 backdrop-blur-sm hover:bg-white rounded-xl p-4 border border-white/20 hover:border-[#E7B947] transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl">{sector.icon}</span>
-                  <div 
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: sector.color }}
-                  />
+              <span className="absolute -bottom-16 -right-10 text-8xl text-[#E7B947]/20 font-serif">"</span>
+            </div>
+
+            <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 w-full border-t border-zinc-100 pt-12">
+              {[
+                { label: "Established", val: "1959" },
+                { label: "Members", val: "1,500+" },
+                { label: "Sectors", val: "13" },
+                { label: "Impact", val: "AfCFTA Ready" }
+              ].map((stat, i) => (
+                <div key={i} className="text-center">
+                  <div className="text-[#0B1E3A] font-serif font-bold text-2xl">{stat.val}</div>
+                  <div className="text-[#E7B947] text-[10px] uppercase tracking-widest font-bold">{stat.label}</div>
                 </div>
-                <h3 className="text-white font-bold text-sm leading-tight group-hover:text-[#E7B947] transition-colors">
-                  {sector.name}
-                </h3>
-              </Link>
-            ))}
-          </div>
-
-          {/* View All Button */}
-          <div className="text-center">
-            <Link 
-              href="/sectors"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-[#E7B947] text-[#0B1E3A] rounded-full font-bold hover:bg-white transition-colors"
-            >
-              {t.allSectors}
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Resource Types Quick Links */}
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-6">
-            <Link href="/sectors?type=pdf" className="flex items-center gap-4 bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 group">
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-600 transition-colors">
-                <FileText className="w-6 h-6 text-red-600 group-hover:text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#0B1E3A]">PDF Reports</h3>
-                <p className="text-sm text-gray-600">Download sector reports</p>
-              </div>
-            </Link>
-            <Link href="/sectors?type=powerbi" className="flex items-center gap-4 bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 group">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-500 transition-colors">
-                <BarChart3 className="w-6 h-6 text-yellow-600 group-hover:text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#0B1E3A]">Power BI Dashboards</h3>
-                <p className="text-sm text-gray-600">Interactive analytics</p>
-              </div>
-            </Link>
-            <Link href="/research/barometer" className="flex items-center gap-4 bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 group">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                <Database className="w-6 h-6 text-blue-600 group-hover:text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#0B1E3A]">Trade Database</h3>
-                <p className="text-sm text-gray-600">ICMS customs data</p>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
+
 
       {/* STRATEGIC IMPACT SECTION */}
       <section className="py-24 bg-gray-100 relative z-10">
@@ -348,6 +296,7 @@ export default function Home() {
         </div>
       </section>
 
+
       {/* STATS BAND */}
       <section className="bg-[#0B1E3A] text-white py-16 z-10 relative">
         <div className="container mx-auto px-6 grid md:grid-cols-4 gap-8 text-center">
@@ -359,49 +308,8 @@ export default function Home() {
       </section>
 
 
-      {/* ABOUT SECTION */}
-      <section id="about" className="py-24 z-10 relative overflow-hidden bg-white">
-        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 text-[20rem] font-serif font-black text-zinc-50 opacity-[0.03] select-none">
-          KAM
-        </div>
-
-        <div className="container mx-auto px-6 max-w-5xl relative">
-          <div className="flex flex-col items-center">
-            <div className="w-20 h-1 bg-[#E7B947] mb-10 rounded-full"></div>
-            
-            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-[#0B1E3A] mb-8 text-center leading-tight">
-              {t.aboutTitle}
-            </h2>
-            
-            <div className="relative">
-              <span className="absolute -top-10 -left-10 text-8xl text-[#E7B947]/20 font-serif">"</span>
-              
-              <p className="text-gray-600 leading-relaxed text-xl lg:text-2xl font-light italic text-center max-w-4xl mx-auto">
-                {t.aboutDesc}
-              </p>
-
-              <span className="absolute -bottom-16 -right-10 text-8xl text-[#E7B947]/20 font-serif">"</span>
-            </div>
-
-            <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 w-full border-t border-zinc-100 pt-12">
-              {[
-                { label: "Established", val: "1959" },
-                { label: "Members", val: "1,500+" },
-                { label: "Sectors", val: "13" },
-                { label: "Impact", val: "AfCFTA Ready" }
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-[#0B1E3A] font-serif font-bold text-2xl">{stat.val}</div>
-                  <div className="text-[#E7B947] text-[10px] uppercase tracking-widest font-bold">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-
       {/* NEWS SECTION */}
+
       <section id="news" className="bg-zinc-50 py-28 relative z-10">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
