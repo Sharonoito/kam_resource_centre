@@ -28,13 +28,13 @@ export async function GET(req: NextRequest) {
     }
 
     const [documents, total] = await Promise.all([
-      prisma.vDocumentsAdmin.findMany({
+      prisma.v_documents_admin.findMany({
         where,
         skip,
         take: limit,
         orderBy: { title: 'asc' },
       }),
-      prisma.vDocumentsAdmin.count({ where }),
+      prisma.v_documents_admin.count({ where }),
     ])
 
     return NextResponse.json({ documents, total, page, limit })

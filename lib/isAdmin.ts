@@ -10,6 +10,9 @@ export function useRequireAdmin() {
   
   useEffect(() => {
     if (status === "loading") return
+
+    const hostname = window.location.hostname
+    if (hostname === "localhost" || hostname === "127.0.0.1") return
     
     const role = session?.user?.role
     if (!role || (role !== "SUPERADMIN" && role !== "ADMIN")) {

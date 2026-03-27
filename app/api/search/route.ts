@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from "@/lib/prisma";
 
+const MAX_SEARCH_LIMIT = 100;
+
 // Global Product Search API - Focuses on trade data (imports/exports) from icms_master
 // Supports filtering by regime (import/export), year, and country
 export async function GET(request: Request) {
@@ -11,7 +13,10 @@ export async function GET(request: Request) {
   const year = searchParams.get('year');
   const country = searchParams.get('country');
   const hsCode = searchParams.get('hscode');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const parsedLimit = Number.parseInt(searchParams.get('limit') || '20', 10);
+  const limit = Number.isFinite(parsedLimit)
+    ? Math.min(Math.max(parsedLimit, 1), MAX_SEARCH_LIMIT)
+    : 20;
 
   if (!query || query.length < 2) {
     return NextResponse.json({ 
@@ -46,7 +51,10 @@ export async function GET(request: Request) {
 
     // Add year filter
     if (year) {
-      whereConditions.year = parseInt(year);
+      const parsedYear = Number.parseInt(year, 10);
+      if (Number.isFinite(parsedYear)) {
+        whereConditions.year = parsedYear;
+      }
     }
 
     // Add country filter
@@ -137,7 +145,7 @@ export async function GET(request: Request) {
         }
       });
     } catch (logError) {
-      console.log('Search logging skipped:', logError);
+      console.warn('Search logging skipped');
     }
 
     return NextResponse.json({
@@ -153,10 +161,10 @@ export async function GET(request: Request) {
       }
     });
 
-  } catch (error: any) {
-    console.error('Search Error:', error);
+  } catch (error) {
+    console.error('Search request failed', error);
     return NextResponse.json({ 
-      error: error.message,
+      error: 'Internal server error',
       results: []
     }, { status: 500 });
   }
@@ -193,7 +201,7 @@ export async function POST(request: Request) {
           is_featured: true
         },
         include: {
-          sector: true,
+          // sector: true,
           sub_sector: true,
         },
         take: 10,
@@ -205,8 +213,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error('Search POST request failed', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

@@ -177,8 +177,6 @@ export async function POST(req: NextRequest) {
         pricing_tier: "FREE",
         is_active: true,
         sector_id: kamSectorId > 0 ? kamSectorId : null,
-        // Mirrors sector-style labels consumed by v_documents_admin queries.
-        sector: sectionNames[0] || officialKamSectorName,
         tags: tags.join(", "),
         keywords: tags.join(", "),
         author: createdBy,

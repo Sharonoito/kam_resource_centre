@@ -68,14 +68,22 @@ export default function BulkUploadPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-playfair text-kam-navy mb-2">Bulk Upload</h1>
-        <p className="text-gray-600">Upload CSV or Excel with content data. Columns: title,description,sector_slug,content_type,file_name</p>
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h1 className="text-3xl font-semibold text-kam-navy mb-2">Bulk Upload</h1>
+        <p className="text-slate-600">Upload CSV or Excel with content data. Columns: title, description, sector_slug, content_type, file_name</p>
+        <a
+          href="/templates/bulk-upload-template.csv"
+          download
+          className="mt-4 inline-flex items-center rounded-lg border border-kam-blue/25 bg-kam-blue/5 px-4 py-2 text-sm font-medium text-kam-navy hover:bg-kam-blue/10 transition"
+        >
+          <FileSpreadsheet className="h-4 w-4 mr-2" />
+          Download Excel Template (CSV)
+        </a>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border border-slate-200 shadow-sm">
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="flex items-center gap-2 text-kam-navy">
             <FileSpreadsheet className="h-6 w-6" />
             Bulk CSV/Excel Upload
           </CardTitle>
@@ -90,7 +98,7 @@ export default function BulkUploadPage() {
                 type="file"
                 accept=".csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                 onChange={handleFileChange}
-                className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-kam-blue"
+                className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg hover:border-kam-blue"
                 required
               />
             </div>
@@ -99,9 +107,9 @@ export default function BulkUploadPage() {
               <div>
                 <h3 className="font-semibold mb-3">Preview ({preview.length} rows)</h3>
                 <div className="overflow-auto max-h-96">
-                  <table className="w-full border-collapse bg-white shadow rounded-lg">
+                  <table className="w-full border-collapse bg-white border border-slate-200 rounded-lg overflow-hidden">
                     <thead>
-                      <tr className="bg-gray-50">
+                      <tr className="bg-kam-blue/5">
                         {preview[0] && Object.keys(preview[0]).map((key) => (
                           <th key={key} className="border p-3 text-left font-semibold">{key}</th>
                         ))}
@@ -131,7 +139,7 @@ export default function BulkUploadPage() {
             <button
               type="submit"
               disabled={loading || !file}
-              className="w-full bg-kam-gold text-kam-navy py-4 px-8 rounded-xl font-bold text-lg hover:bg-yellow-400 disabled:opacity-50 flex items-center justify-center space-x-3 transition shadow-lg"
+              className="w-full bg-kam-gold text-kam-navy py-4 px-8 rounded-xl font-bold text-lg hover:brightness-95 disabled:opacity-50 flex items-center justify-center space-x-3 transition shadow-sm"
             >
               {loading ? (
                 <>

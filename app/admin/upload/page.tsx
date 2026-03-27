@@ -14,7 +14,7 @@ export default function UploadPage() {
     : 'bg-amber-50 text-amber-700 border-amber-200'
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="w-full max-w-none space-y-6">
       <div>
         <h1 className="text-3xl font-playfair text-kam-navy mb-2">Resource Management</h1>
         <p className="text-gray-600">Create sector-specific or general resources for the public portal.</p>

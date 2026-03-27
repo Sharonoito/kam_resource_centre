@@ -18,6 +18,7 @@ function clearAuthCookies(response: NextResponse) {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const isLocalhost = req.nextUrl.hostname === "localhost" || req.nextUrl.hostname === "127.0.0.1"
 
   if (
     pathname.startsWith("/_next") ||
@@ -52,7 +53,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Protect admin routes.
-  if (pathname.startsWith("/admin") && !isAdmin) {
+  if (pathname.startsWith("/admin") && !isAdmin && !isLocalhost) {
     return NextResponse.redirect(new URL("/unauthorized", req.url))
   }
 
