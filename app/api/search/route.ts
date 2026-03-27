@@ -193,7 +193,7 @@ export async function POST(request: Request) {
           is_featured: true
         },
         include: {
-          sector: true,
+          sector_relation: true,
           sub_sector: true,
         },
         take: 10,

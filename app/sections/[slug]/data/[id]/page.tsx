@@ -41,8 +41,8 @@ async function getSectionData(slug: string, id: string) {
       origin: record.origin_country || 'N/A',
       destination: record.country_name || 'Kenya',
       quantity: record.quantity?.toString() || 'N/A',
-      fobValue: record.fob_value ? `KES ${Math.round(record.fob_value).toLocaleString()}` : 'N/A',
-      dutyPaid: record.import_duty ? `KES ${Math.round(record.import_duty).toLocaleString()}` : 'N/A',
+      fobValue: record.fob_value != null ? `KES ${Math.round(Number(record.fob_value)).toLocaleString()}` : 'N/A',
+      dutyPaid: record.import_duty != null ? `KES ${Math.round(Number(record.import_duty)).toLocaleString()}` : 'N/A',
       trader: record.entry_number || 'N/A',
       documents: 2, // Static for now
     }));

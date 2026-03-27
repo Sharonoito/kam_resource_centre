@@ -1,3 +1,9 @@
+import { redirect } from "next/navigation";
+
+export default function KraCustomsRedirectPage() {
+	redirect("/research/kra");
+}
+
 // "use client";
 
 // import { useState, useEffect } from "react";

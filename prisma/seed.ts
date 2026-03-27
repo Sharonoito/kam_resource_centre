@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -169,7 +169,7 @@ async function main() {
   }
 
   // 3. SEED SAMPLE CONTENT w/PRICING
-  const sampleContent = [
+  const sampleContent: Prisma.kam_contentCreateInput[] = [
     {
       title: 'Livestock Annual Report 2024',
       slug: 'livestock-annual-report-2024',
@@ -180,7 +180,7 @@ async function main() {
       price_kes: 500,
       pdf_url: '/documents/sector-reports/livestock-annual-report-2024.pdf',
       tags: 'livestock, trade, export, report',
-      sector: { connect: { slug: 'agriculture-agro-processing' } }
+      sector_relation: { connect: { slug: 'agriculture-agro-processing' } }
     },
     {
       title: 'Member Export Guide',
@@ -192,7 +192,7 @@ async function main() {
       price_kes: 0,
       pdf_url: '/documents/member-export-guide.pdf',
       tags: 'afcfta, export, member, guide',
-      sector: { connect: { slug: 'automotive' } }
+      sector_relation: { connect: { slug: 'automotive' } }
     },
     {
       title: 'Premium Market Analysis',
@@ -204,7 +204,7 @@ async function main() {
       price_kes: 1500,
       pdf_url: '/documents/premium-market-analysis.pdf',
       tags: 'market, analysis, premium, paid',
-      sector: { connect: { slug: 'chemical-allied' } }
+      sector_relation: { connect: { slug: 'chemical-allied' } }
     }
   ]
 
