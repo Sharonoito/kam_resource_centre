@@ -119,17 +119,17 @@ export default function Navbar() {
       <header className="fixed top-0 left-0 z-50 w-full" onMouseLeave={handleMouseLeave}>
         {/* TOP BAR: Logo and Login */}
         <div className="bg-white border-b border-zinc-100 h-20">
-          <div className="container mx-auto flex h-full items-center justify-between px-6">
-            <Link href="/" className="flex items-center gap-4">
-              <img src="/images/kamlogo.jpg" className="h-12 w-auto object-contain" alt="KAM Logo" />
+          <div className="container mx-auto flex h-full items-center justify-between gap-3 px-4 md:px-6">
+            <Link href="/" className="flex items-center gap-2 md:gap-4 min-w-0 flex-1 pr-2 md:pr-4">
+              <img src="/images/kamlogo.jpg" className="h-10 md:h-12 w-auto object-contain shrink-0" alt="KAM Logo" />
               <div className="h-8 w-[1px] bg-zinc-200 hidden md:block" />
-              <div className="flex flex-col leading-tight">
-                <span className="text-xl font-black text-[#193C8D] uppercase tracking-tighter">KAM</span>
-                <span className="text-lg font-medium text-zinc-500">Resource Centre</span>
+              <div className="flex flex-col leading-tight min-w-0">
+                <span className="text-lg md:text-xl font-black text-[#193C8D] uppercase tracking-tighter truncate">KAM</span>
+                <span className="hidden sm:block text-sm md:text-lg font-medium text-zinc-500 truncate">Resource Centre</span>
               </div>
             </Link>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 md:gap-6 shrink-0">
               <button
                 type="button"
                 aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
