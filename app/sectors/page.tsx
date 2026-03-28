@@ -25,8 +25,17 @@ async function getAllDocuments(canViewAll: boolean) {
   }
 }
 
+async function getSessionSafe() {
+  try {
+    return await getServerSession(authOptions);
+  } catch (error) {
+    console.error("Failed to resolve session on sectors page", error);
+    return null;
+  }
+}
+
 export default async function SectorsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionSafe();
   const role = session?.user?.role ?? "PUBLIC";
   const accessTier = session?.user?.accessTier ?? "PUBLIC_FREE_ONLY";
   const canViewAll =
