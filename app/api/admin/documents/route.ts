@@ -16,23 +16,22 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const skip = (page - 1) * limit
 
-    const filters: Prisma.Sql[] = [Prisma.sql`is_active = ${isActive}`]
+    const filterConditions: Prisma.Sql[] = [Prisma.sql`is_active = ${isActive}`]
     if (sector) {
-      filters.push(Prisma.sql`sector ILIKE ${`%${sector}%`}`)
+      filterConditions.push(Prisma.sql`sector ILIKE ${`%${sector}%`}`)
     }
-    const whereClause = Prisma.sql`WHERE ${Prisma.join(filters, ' AND ')}`
+    const whereClause = Prisma.sql`WHERE ${Prisma.join(filterConditions, ' AND ')}`
 
     const [documents, totalRows] = await Promise.all([
-      prisma.$queryRaw<any[]>`
-        SELECT *
-        FROM sector.v_documents_admin
+      prisma.$queryRaw<typeof prisma.v_documents_admin[]>`
+        SELECT * FROM v_documents_admin
         ${whereClause}
         ORDER BY title ASC
-        LIMIT ${limit} OFFSET ${skip}
+        LIMIT ${limit}
+        OFFSET ${skip}
       `,
-      prisma.$queryRaw<Array<{ count: bigint | number }>>`
-        SELECT COUNT(*) AS count
-        FROM sector.v_documents_admin
+      prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*) as count FROM v_documents_admin
         ${whereClause}
       `,
     ])

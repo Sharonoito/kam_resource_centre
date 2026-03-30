@@ -29,6 +29,15 @@ body {
   font-family: var(--font-poppins), ui-sans-serif, system-ui;
 }
 
+/* Force a single site-wide typeface without changing page structure. */
+.font-sans,
+.font-serif,
+.font-playfair,
+.font-dm-sans,
+.font-poppins {
+  font-family: var(--font-poppins), ui-sans-serif, system-ui !important;
+}
+
 /* @import "tailwindcss";
 
 :root {

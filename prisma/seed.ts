@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient, ContentType, ContentVisibility, PricingTier } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -174,9 +174,9 @@ async function main() {
       title: 'Livestock Annual Report 2024',
       slug: 'livestock-annual-report-2024',
       description: 'Comprehensive annual trade report for live animals and animal products.',
-      content_type: 'PDF',
-      visibility: 'PUBLIC',
-      pricing_tier: 'PAID',
+      content_type: 'PDF' as ContentType,
+      visibility: 'PUBLIC' as ContentVisibility,
+      pricing_tier: 'PAID' as PricingTier,
       price_kes: 500,
       pdf_url: '/documents/sector-reports/livestock-annual-report-2024.pdf',
       tags: 'livestock, trade, export, report',
@@ -186,9 +186,9 @@ async function main() {
       title: 'Member Export Guide',
       slug: 'member-export-guide',
       description: 'Exclusive guide for KAM members on AfCFTA export procedures.',
-      content_type: 'PDF',
-      visibility: 'MEMBER',
-      pricing_tier: 'MEMBER_ONLY',
+      content_type: 'PDF' as ContentType,
+      visibility: 'MEMBER' as ContentVisibility,
+      pricing_tier: 'MEMBER_ONLY' as PricingTier,
       price_kes: 0,
       pdf_url: '/documents/member-export-guide.pdf',
       tags: 'afcfta, export, member, guide',
@@ -198,9 +198,9 @@ async function main() {
       title: 'Premium Market Analysis',
       slug: 'premium-market-analysis',
       description: 'Advanced market analysis report for paid subscribers.',
-      content_type: 'PDF',
-      visibility: 'PUBLIC',
-      pricing_tier: 'PAID',
+      content_type: 'PDF' as ContentType,
+      visibility: 'PUBLIC' as ContentVisibility,
+      pricing_tier: 'PAID' as PricingTier,
       price_kes: 1500,
       pdf_url: '/documents/premium-market-analysis.pdf',
       tags: 'market, analysis, premium, paid',

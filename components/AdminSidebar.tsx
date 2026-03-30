@@ -1,7 +1,5 @@
 "use client"
 
-"use client"
-
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
@@ -33,12 +31,12 @@ export default function AdminSidebar() {
   }
 
   return (
-    <div className="w-72 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex flex-col h-full shadow-2xl">
-      <div className="p-6 border-b border-slate-700 flex-shrink-0">
-        <h2 className="text-2xl font-playfair text-kam-gold mb-1">KAM Admin</h2>
-        <p className="text-slate-300 text-sm">Resource Centre</p>
+    <div className="w-72 bg-kam-blue text-white flex flex-col h-full">
+      <div className="p-6 border-b border-white/20 flex-shrink-0">
+        <h2 className="text-2xl font-semibold text-kam-gold mb-1">KAM Admin</h2>
+        <p className="text-white/80 text-sm">Resource Centre</p>
         {session && (
-          <p className="text-xs text-slate-400 mt-2 truncate">
+          <p className="text-xs text-white/60 mt-2 truncate">
             {session.user?.name || session.user?.email}
           </p>
         )}
@@ -53,8 +51,8 @@ export default function AdminSidebar() {
               href={item.href}
               className={`flex items-center space-x-3 p-3 rounded-xl transition-all group ${
                 isActive
-                  ? 'bg-gradient-to-r from-kam-gold to-yellow-400 text-slate-900 font-semibold shadow-lg'
-                  : 'hover:bg-slate-700/50 text-slate-200'
+                  ? 'bg-kam-gold text-kam-navy font-semibold shadow-lg'
+                  : 'hover:bg-white/10 text-white/90'
               }`}
             >
               <Icon className="h-5 w-5 flex-shrink-0" />
@@ -63,10 +61,10 @@ export default function AdminSidebar() {
           )
         })}
       </nav>
-      <div className="p-6 border-t border-slate-700 flex-shrink-0">
+      <div className="p-6 border-t border-white/20 flex-shrink-0">
         <button 
           onClick={handleLogout}
-          className="flex items-center space-x-3 w-full p-3 text-left rounded-xl hover:bg-slate-700/50 transition-colors text-slate-300 hover:text-white"
+          className="flex items-center space-x-3 w-full p-3 text-left rounded-xl hover:bg-white/10 transition-colors text-white/80 hover:text-white"
         >
           <LogOut className="h-5 w-5" />
           <span>Logout</span>

@@ -90,7 +90,12 @@ async function fetchDocument(url: string): Promise<Response> {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  return fetch(url, { method: "GET", headers });
+  return fetch(url, {
+    method: "GET",
+    headers,
+    cache: "no-store",
+    signal: AbortSignal.timeout(15000),
+  });
 }
 
 export async function GET(
@@ -150,25 +155,25 @@ export async function GET(
 
     const resourceDoc = (resourceDocsRaw as any[])[0] || null;
 
-const primaryUrl = doc.download_url.trim();
-  const fallbackUrl = resourceDoc?.sharepoint_download_url?.trim() || "";
-  const fallbackItemId = resourceDoc?.sharepoint_file_id?.trim() || "";
-  const primaryItemId = extractGraphItemId(primaryUrl);
-  const effectiveItemId = fallbackItemId || primaryItemId;
-  const configuredSiteId = process.env.SHAREPOINT_SITE_ID?.trim() || "";
-  const configuredHost = process.env.SHAREPOINT_HOSTNAME?.trim() || "";
+    const primaryUrl = doc.download_url.trim();
+    const fallbackUrl = resourceDoc?.sharepoint_download_url?.trim() || "";
+    const fallbackItemId = resourceDoc?.sharepoint_file_id?.trim() || "";
+    const primaryItemId = extractGraphItemId(primaryUrl);
+    const effectiveItemId = fallbackItemId || primaryItemId;
+    const configuredSiteId = process.env.SHAREPOINT_SITE_ID?.trim() || "";
+    const configuredHost = process.env.SHAREPOINT_HOSTNAME?.trim() || "";
 
-  let candidateUrls: string[] = [];
-  if (resourceDoc?.filename) {
-    // Fix: sanitize and match exact public filename (no %20 → space)
-    const publicFilename = resourceDoc.filename.replace(/%20/g, ' ').trim();
-    candidateUrls.push(`/documents/sector-reports/${publicFilename}`);
-  }
-  candidateUrls.push(primaryUrl);
-  if (fallbackUrl) {
-    candidateUrls.push(toGraphSharesContentUrl(fallbackUrl));
-  }
-  if (fallbackUrl && fallbackUrl !== primaryUrl) {
+    let candidateUrls: string[] = [];
+    if (resourceDoc?.filename) {
+      // Sanitize and match exact public filename (no %20 -> space)
+      const publicFilename = resourceDoc.filename.replace(/%20/g, " ").trim();
+      candidateUrls.push(`/documents/sector-reports/${publicFilename}`);
+    }
+    candidateUrls.push(primaryUrl);
+    if (fallbackUrl) {
+      candidateUrls.push(toGraphSharesContentUrl(fallbackUrl));
+    }
+    if (fallbackUrl && fallbackUrl !== primaryUrl) {
       candidateUrls.push(fallbackUrl);
       const fallbackHost = (() => {
         try {
@@ -245,8 +250,7 @@ const primaryUrl = doc.download_url.trim();
           docId,
           hint: configuredSiteId
             ? "Configured SHAREPOINT_SITE_ID fallback was attempted."
-            : "Set SHAREPOINT_SITE_ID in .env to enable file-id-based Graph fallback.",
-          details: attempted,
+            : "Configure SHAREPOINT_SITE_ID to enable file-id-based Graph fallback.",
         },
         { status: 404 }
       );
@@ -254,20 +258,26 @@ const primaryUrl = doc.download_url.trim();
 
     // 5. Stream the PDF back to the browser
     const contentType = upstreamResponse.headers.get("content-type") || "application/pdf";
-const url = new URL(request.url);
-  const mode = url.searchParams.get('mode');
-  const filename = resourceDoc?.filename || doc.title ? `${doc.title.replace(/[^a-z0-9]/gi, '_')}.pdf` : 'document.pdf';
+    const url = new URL(request.url);
+    const mode = url.searchParams.get("mode");
+    const fallbackName = doc.title
+      ? `${doc.title.replace(/[^a-z0-9]/gi, "_")}.pdf`
+      : "document.pdf";
+    const filename = resourceDoc?.filename || fallbackName;
 
-  const disposition = mode === 'download' ? `attachment; filename="${filename}"` : `inline; filename="${filename}"`;
+    const disposition =
+      mode === "download"
+        ? `attachment; filename="${filename}"`
+        : `inline; filename="${filename}"`;
 
-  return new NextResponse(upstreamResponse.body, {
-    headers: {
-      "Content-Type": contentType,
-      "Content-Disposition": disposition,
-      "Cache-Control": "no-store",
-    },
-  });
-
+    return new NextResponse(upstreamResponse.body, {
+      headers: {
+        "Content-Type": contentType,
+        "Content-Disposition": disposition,
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch (error: any) {
     console.error("Critical Proxy Error:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });

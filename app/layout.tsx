@@ -27,9 +27,16 @@ export const metadata: Metadata = {
   description: "Empowering Kenyan manufacturers through data-driven intelligence.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${poppins.variable}`}>
+      <head>
+        <script src="/chat-toggle.js" async defer />
+      </head>
       <body className="font-sans antialiased bg-white text-gray-900">
         <Providers>
           <Navbar />
@@ -43,3 +50,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
