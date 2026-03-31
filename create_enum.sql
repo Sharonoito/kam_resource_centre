@@ -1,0 +1,5 @@
+DO $$ BEGIN
+  CREATE TYPE "UserRole" AS ENUM ('SUPERADMIN', 'ADMIN', 'KAM_MEMBER', 'PUBLIC');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
