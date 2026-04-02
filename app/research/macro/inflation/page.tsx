@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
-import { ChevronRight, Database, Filter, Search, RotateCcw } from "lucide-react";
+import { ChevronRight, Database, Filter, Search, RotateCcw, BarChart3, TrendingUp } from "lucide-react";
 import prisma from "@/lib/prisma";
 
 type QueryValue = string | string[] | undefined;
@@ -59,9 +59,10 @@ export default async function MacroInflationPage({
   let indicators: Array<{ indicator_code: string | null; indicator_name: string | null }> = [];
   let total = 0;
   let error = "";
+  let inflationEmbedUrl: string | null = null;
 
   try {
-    const [resultRows, totalRows, yearRows, indicatorRows] = await Promise.all([
+    const [resultRows, totalRows, yearRows, indicatorRows, pbiRecord] = await Promise.all([
       prisma.$queryRaw<Row[]>`
         SELECT id, country_iso3, country_name, year, value, indicator_code, indicator_name, source, is_projection
         FROM macro_data.inflation
@@ -83,12 +84,17 @@ export default async function MacroInflationPage({
         GROUP BY indicator_code
         ORDER BY indicator_code ASC
       `,
+      prisma.kam_content.findUnique({
+        where: { slug: 'macro-africa-inflation-pbi' },
+        select: { powerbi_embed: true, powerbi_url: true },
+      }),
     ]);
 
     rows = resultRows;
     years = yearRows;
     indicators = indicatorRows;
     total = Number(totalRows[0]?.count ?? 0);
+    inflationEmbedUrl = pbiRecord?.powerbi_embed ?? pbiRecord?.powerbi_url ?? null;
   } catch (e) {
     console.error("Macro inflation query failed", e);
     error = "Macro database is currently unreachable.";
@@ -105,7 +111,7 @@ export default async function MacroInflationPage({
 
   return (
     <div className="min-h-screen bg-[#F1F5F9] font-[Poppins] text-slate-700">
-      <header className="bg-[#1e3a8a] pt-10 pb-16 text-white">
+      <header className="bg-[#1e3a8a] pt-10 pb-24 text-white">
         <div className="container mx-auto px-6">
           <nav className="mb-5 text-xs text-blue-100 flex items-center gap-2">
             <Link href="/research" className="hover:text-white">Research Hub</Link>
@@ -120,67 +126,186 @@ export default async function MacroInflationPage({
         </div>
       </header>
 
-      <div className="container mx-auto px-6 -mt-8 pb-20 flex flex-col xl:flex-row gap-8">
-        <aside className="w-full xl:w-[300px] shrink-0">
+      <div className="container mx-auto px-6 -mt-16 pb-20 space-y-8">
+
+        {/* Power BI — Full width */}
+        {inflationEmbedUrl && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <iframe
+              title="Africa Inflation Dashboard"
+              src={inflationEmbedUrl}
+              className="w-full aspect-video border-0"
+              allowFullScreen
+            />
+          </div>
+        )}
+
+        <div className="flex flex-col xl:flex-row gap-8">
+        {/* FILTERS SIDEBAR */}
+        <aside className="w-full xl:w-[220px] shrink-0">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xs font-semibold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Filter className="h-4 w-4 text-blue-600" /> Filters</h2>
-              <Link href="/research/macro/inflation" className="text-slate-300 hover:text-blue-600 transition"><RotateCcw className="h-3.5 w-3.5" /></Link>
+              <h2 className="text-xs font-semibold uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                <Filter className="h-4 w-4 text-blue-600" /> Filters
+              </h2>
+              <Link href="/research/macro/inflation" className="text-slate-300 hover:text-blue-600 transition">
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Link>
             </div>
             <form method="GET" className="space-y-4">
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Country / ISO3</label>
-                <div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" /><input name="country" defaultValue={country} className={`${inputStyle} pl-9`} /></div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <input name="country" defaultValue={country} className={`${inputStyle} pl-9`} />
+                </div>
               </div>
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Year</label>
-                <select name="year" defaultValue={year} className={inputStyle}><option value="">All Years</option>{years.map((y) => y.year != null ? <option key={y.year} value={String(y.year)}>{y.year}</option> : null)}</select>
+                <select name="year" defaultValue={year} className={inputStyle}>
+                  <option value="">All Years</option>
+                  {years.map((y) => y.year != null ? <option key={y.year} value={String(y.year)}>{y.year}</option> : null)}
+                </select>
               </div>
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Indicator</label>
-                <select name="indicator" defaultValue={indicator} className={inputStyle}><option value="">All Indicators</option>{indicators.map((i) => i.indicator_code ? <option key={i.indicator_code} value={i.indicator_code}>{i.indicator_code} {i.indicator_name ? `- ${i.indicator_name}` : ""}</option> : null)}</select>
+                <select name="indicator" defaultValue={indicator} className={inputStyle}>
+                  <option value="">All Indicators</option>
+                  {indicators.map((i) => i.indicator_code ? <option key={i.indicator_code} value={i.indicator_code}>{i.indicator_code}{i.indicator_name ? ` - ${i.indicator_name}` : ""}</option> : null)}
+                </select>
               </div>
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Rows</label>
-                <select name="pageSize" defaultValue={String(pageSize)} className={inputStyle}><option value="15">15</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select>
+                <select name="pageSize" defaultValue={String(pageSize)} className={inputStyle}>
+                  <option value="15">15</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
               </div>
-              <button type="submit" className="w-full bg-[#1e3a8a] text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-800 shadow-md transition">Apply Filters</button>
+              <button type="submit" className="w-full bg-[#1e3a8a] text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-800 shadow-md transition">
+                Apply Filters
+              </button>
             </form>
           </div>
         </aside>
 
-        <main className="flex-1">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
-              <h3 className="text-sm font-semibold flex items-center gap-2 text-slate-800"><Database className="h-4 w-4 text-blue-600" /> Inflation Records</h3>
-              <span className="text-xs text-slate-500">Page {page} / {totalPages}</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-tight"><tr><th className="px-6 py-4 text-left">Country</th><th className="px-6 py-4 text-left">Year</th><th className="px-6 py-4 text-left">Indicator</th><th className="px-6 py-4 text-right">Value</th><th className="px-6 py-4 text-left">Source</th></tr></thead>
-                <tbody className="divide-y border-t">
-                  {rows.length === 0 && <tr><td colSpan={5} className="px-6 py-10 text-center text-slate-400 text-sm">{error || "No inflation records found."}</td></tr>}
-                  {rows.map((r) => (
-                    <tr key={r.id} className="hover:bg-blue-50/40 transition-colors">
-                      <td className="px-6 py-4"><div className="font-semibold text-slate-800">{r.country_name}</div><div className="text-[10px] text-slate-400 uppercase">{r.country_iso3}</div></td>
-                      <td className="px-6 py-4 font-mono font-semibold">{r.year}</td>
-                      <td className="px-6 py-4"><div className="font-medium text-slate-700">{r.indicator_name}</div><div className="text-[10px] text-slate-400 uppercase">{r.indicator_code} {r.is_projection ? "• projection" : ""}</div></td>
-                      <td className="px-6 py-4 text-right font-mono font-bold">{r.value == null ? "-" : Number(r.value).toFixed(2)}</td>
-                      <td className="px-6 py-4"><span className={`text-[10px] font-black px-2.5 py-1 rounded uppercase ${sourceBadgeClass(r.source)}`}>{r.source || "Unknown"}</span></td>
+        {/* MAIN CONTENT */}
+        <main className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+          {/* Data Table */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 className="text-sm font-semibold flex items-center gap-2 text-slate-800">
+                  <Database className="h-4 w-4 text-blue-600" /> Inflation Records
+                </h3>
+                <span className="text-xs text-slate-500">Page {page} / {totalPages}</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-tight">
+                    <tr>
+                      <th className="px-6 py-4 text-left">Country</th>
+                      <th className="px-6 py-4 text-left">Year</th>
+                      <th className="px-6 py-4 text-left">Indicator</th>
+                      <th className="px-6 py-4 text-right">Value</th>
+                      <th className="px-6 py-4 text-left">Source</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
-              <span className="text-[11px] font-medium text-slate-400">Total: {total.toLocaleString()} records</span>
-              <div className="flex gap-2">
-                <Link href={`/research/macro/inflation?${new URLSearchParams({ ...Object.fromEntries(baseParams), page: String(page - 1) }).toString()}`} className={`text-[11px] font-bold uppercase px-4 py-2 border rounded-xl bg-white transition hover:bg-slate-50 ${page <= 1 ? "opacity-20 pointer-events-none" : ""}`}>Back</Link>
-                <Link href={`/research/macro/inflation?${new URLSearchParams({ ...Object.fromEntries(baseParams), page: String(page + 1) }).toString()}`} className={`text-[11px] font-bold uppercase px-4 py-2 bg-[#1e3a8a] text-white rounded-xl shadow-md transition hover:bg-blue-800 ${page >= totalPages ? "opacity-20 pointer-events-none" : ""}`}>Next</Link>
+                  </thead>
+                  <tbody className="divide-y border-t">
+                    {rows.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-slate-400 text-sm">
+                          {error || "No inflation records found."}
+                        </td>
+                      </tr>
+                    )}
+                    {rows.map((r) => (
+                      <tr key={r.id} className="hover:bg-blue-50/40 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-slate-800">{r.country_name}</div>
+                          <div className="text-[10px] text-slate-400 uppercase">{r.country_iso3}</div>
+                        </td>
+                        <td className="px-6 py-4 font-mono font-semibold">{r.year}</td>
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-slate-700">{r.indicator_name}</div>
+                          <div className="text-[10px] text-slate-400 uppercase">{r.indicator_code} {r.is_projection ? "• projection" : ""}</div>
+                        </td>
+                        <td className="px-6 py-4 text-right font-mono font-bold">
+                          {r.value == null ? "-" : Number(r.value).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-[10px] font-black px-2.5 py-1 rounded uppercase ${sourceBadgeClass(r.source)}`}>
+                            {r.source || "Unknown"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
+                <span className="text-[11px] font-medium text-slate-400">Total: {total.toLocaleString()} records</span>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/research/macro/inflation?${new URLSearchParams({ ...Object.fromEntries(baseParams), page: String(page - 1) }).toString()}`}
+                    className={`text-[11px] font-bold uppercase px-4 py-2 border rounded-xl bg-white transition hover:bg-slate-50 ${page <= 1 ? "opacity-20 pointer-events-none" : ""}`}
+                  >Back</Link>
+                  <Link
+                    href={`/research/macro/inflation?${new URLSearchParams({ ...Object.fromEntries(baseParams), page: String(page + 1) }).toString()}`}
+                    className={`text-[11px] font-bold uppercase px-4 py-2 bg-[#1e3a8a] text-white rounded-xl shadow-md transition hover:bg-blue-800 ${page >= totalPages ? "opacity-20 pointer-events-none" : ""}`}
+                  >Next</Link>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* RIGHT SIDEBAR */}
+          <div className="space-y-6 lg:sticky lg:top-8">
+
+            {/* Highlights card */}
+            <div className="bg-[#facc15] text-slate-900 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-5">
+                  <TrendingUp className="h-4 w-4 text-slate-600" />
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-600">Price Dynamics</h4>
+                </div>
+                <h3 className="text-lg font-bold mb-3 tracking-tight">Africa Inflation</h3>
+                <p className="text-sm text-slate-700 leading-relaxed">
+                  Tracks consumer price index changes and inflation projections across African countries, sourced from the IMF and World Bank.
+                </p>
+              </div>
+              <BarChart3 className="absolute -right-6 -bottom-6 h-28 w-28 text-black/5 pointer-events-none group-hover:scale-110 transition-transform" />
+            </div>
+
+            {/* Indicators summary */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <h4 className="text-[10px] font-bold uppercase text-slate-400 mb-4 tracking-widest">Indicators in Dataset</h4>
+              <div className="space-y-2">
+                {indicators.slice(0, 6).map((i) => (
+                  <div key={i.indicator_code} className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
+                    <span className="text-xs text-slate-600 truncate">{i.indicator_name || i.indicator_code}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dataset stat */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4">
+              <div className="bg-blue-50 p-3 rounded-xl">
+                <Database className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-slate-400 leading-none mb-1">Total Records</p>
+                <p className="text-lg font-black text-slate-800 leading-none">{total.toLocaleString()}</p>
+              </div>
+            </div>
+
+          </div>
         </main>
+        </div>{/* end flex row */}
       </div>
     </div>
   );

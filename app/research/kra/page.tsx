@@ -137,11 +137,21 @@ export default async function KRAResearchPage({ searchParams }: PageProps) {
         </div>
       </header>
 
-      <div className="container mx-auto px-6 -mt-16 pb-20">
+      <div className="container mx-auto px-6 -mt-16 pb-20 space-y-8">
+
+        {/* Power BI — Full width */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <iframe
+            title="KRA Trade Intelligence"
+            src={POWER_BI_URL}
+            className="w-full aspect-video border-0"
+          />
+        </div>
+
         <div className="flex flex-col xl:flex-row gap-8">
 
           {/* FILTERS SIDEBAR */}
-          <aside className="w-full xl:w-[300px] shrink-0">
+          <aside className="w-full xl:w-[220px] shrink-0">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xs font-semibold uppercase text-slate-400 tracking-wider flex items-center gap-2">
@@ -201,14 +211,6 @@ export default async function KRAResearchPage({ searchParams }: PageProps) {
 
             {/* LEFT COLUMN */}
             <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 h-[520px]">
-                <iframe
-                  title="PowerBI"
-                  src={POWER_BI_URL}
-                  className="w-full h-full rounded-xl border-0"
-                />
-              </div>
-
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
                   <h3 className="text-sm font-semibold flex items-center gap-2 text-slate-800">

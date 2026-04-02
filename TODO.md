@@ -1,50 +1,26 @@
-# Fix Login Issue - Authentication Diagnosis & Repair
+# PowerBI Sector Integration TODO
 
-## Current Status
-- App was working before recent DB changes (add_password.sql etc.).
-- Test users exist, but likely no hashed passwords set for Credentials login.
-- Google login also failing.
+## [ ] 1. Diagnose Current State
+- Execute `diagnose-powerbi.sql`
+- Confirm: Agriculture sector_id=1 exists, 0 POWERBI kam_content records
 
-## Step 1: [PENDING] Check Environment Variables
-Execute:
-```
-set | findstr /I NEXTAUTH
-set | findstr /I GOOGLE
-```
-Ensure:
-- NEXTAUTH_SECRET=...
-- GOOGLE_CLIENT_ID=...
-- GOOGLE_CLIENT_SECRET=...
+## [ ] 2. Insert PowerBI Records  
+- Execute `insert-powerbi-agriculture.sql` (4 HS sections: Live Animals, Vegetables, Fats/Oils, Foodstuffs)
+- Records get unique slugs, PUBLIC visibility, hardcoded embed URLs
 
-Use client_secret json in ../Downloads for Google creds.
+## [ ] 3. Verify Database
+- Re-run diagnose queries
+- Check: 4 new kam_content with content_type='POWERBI', sector_id=1
 
-## Step 2: [PENDING] Inspect Database with Prisma Studio
-Execute:
-```
-npx prisma studio
-```
-- Open localhost:5555
-- Check `users` table:
-  - Emails
-  - Roles (should be SUPERADMIN/ADMIN/KAM_MEMBER/PUBLIC)
-  - password column (likely NULL for all)
-  - isSubscribed, subscriptionExpiry
+## [ ] 4. Frontend Test
+- `npx prisma generate`
+- Restart dev server (`npm run dev`)
+- Visit `/sectors/agriculture` → See PowerBI cards under HS sections I-IV
 
-## Step 3: [PENDING] Sync Schema & Regenerate Client
-```
-npm run db:push
-npx prisma generate
-```
+## [ ] 5. Scale to All Sectors (Optional)
+- Repeat for other KAM_SECTORS (e.g., automotive=13, leather=4)
+- Use same embed base URL + section-specific pageNames
 
-## Step 4: [PENDING] Create Test User with Password
-Use Prisma Studio to add/edit user password with bcrypt hash, or run script.
+**Expected Result**: PowerBI dashboards visible exactly like PDFs, grouped by HS sections, embedded via PowerBiEmbed component.
 
-## Step 5: [DONE when login works] Test Login
-- Email/PW on /auth/signin
-- Google button
-
-## Step 6: [FOLLOWUP] Add Password Hashing to Register API
-Edit app/api/register/route.ts to bcrypt.hash.
-
-**Next Action: Approve to execute Step 1 & 2?**
-
+**All hardcoded PowerBI links from SQL files will be persisted in kam_content.powerbi_embed**
