@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { signIn, signOut, useSession } from "next-auth/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowRight, ChevronRight } from "lucide-react"
+import { ArrowRight, ChevronRight, Menu, X } from "lucide-react"
 import { KAM_SECTORS } from "@/types/sectors"
 
 interface SubLink {
@@ -23,6 +23,8 @@ interface NavLink {
 
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null)
   const [hoveredSectorId, setHoveredSectorId] = useState<number>(KAM_SECTORS[0].id)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const pathname = usePathname()
@@ -31,6 +33,11 @@ export default function Navbar() {
   const isAdmin = userRole === "SUPERADMIN" || userRole === "ADMIN"
 
   const isActive = (path: string) => pathname === path
+
+  useEffect(() => {
+    setMobileOpen(false)
+    setMobileExpanded(null)
+  }, [pathname])
 
   if (pathname.startsWith('/admin')) {
     return null
@@ -112,17 +119,25 @@ export default function Navbar() {
       <header className="fixed top-0 left-0 z-50 w-full" onMouseLeave={handleMouseLeave}>
         {/* TOP BAR: Logo and Login */}
         <div className="bg-white border-b border-zinc-100 h-20">
-          <div className="container mx-auto flex h-full items-center justify-between px-6">
-            <Link href="/" className="flex items-center gap-4">
-              <img src="/images/kamlogo.jpg" className="h-12 w-auto object-contain" alt="KAM Logo" />
+          <div className="container mx-auto flex h-full items-center justify-between gap-3 px-4 md:px-6">
+            <Link href="/" className="flex items-center gap-2 md:gap-4 min-w-0 flex-1 pr-2 md:pr-4">
+              <img src="/images/kamlogo.jpg" className="h-10 md:h-12 w-auto object-contain shrink-0" alt="KAM Logo" />
               <div className="h-8 w-[1px] bg-zinc-200 hidden md:block" />
-              <div className="flex flex-col leading-tight">
-                <span className="text-xl font-black text-[#193C8D] uppercase tracking-tighter">KAM</span>
-                <span className="text-lg font-medium text-zinc-500">Resource Centre</span>
+              <div className="flex flex-col leading-tight min-w-0">
+                <span className="text-lg md:text-xl font-black text-[#193C8D] uppercase tracking-tighter truncate">KAM</span>
+                <span className="hidden sm:block text-sm md:text-lg font-medium text-zinc-500 truncate">Resource Centre</span>
               </div>
             </Link>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 md:gap-6 shrink-0">
+              <button
+                type="button"
+                aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+                className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-200 text-[#193C8D]"
+                onClick={() => setMobileOpen((prev) => !prev)}
+              >
+                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
                <div className="hidden md:flex gap-3 text-xs font-bold text-zinc-400">
                   <span className="text-[#193C8D] cursor-pointer">EN</span>
                   <span className="cursor-pointer hover:text-[#193C8D]">FR</span>
@@ -165,7 +180,7 @@ export default function Navbar() {
         </div>
 
         {/* BOTTOM BAR: Navigation Links */}
-        <nav className="relative bg-[#193C8D] border-b border-[#E7B947]/30">
+        <nav className="relative bg-[#193C8D] border-b border-[#E7B947]/30 hidden lg:block">
           <div className="container mx-auto flex h-14 items-center px-6">
             <div className="hidden lg:flex items-center gap-1 h-full">
               {publicLinks.map((item) => (
@@ -342,10 +357,84 @@ export default function Navbar() {
             )}
           </AnimatePresence>
         </nav>
+
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="lg:hidden absolute left-0 right-0 top-20 bg-white border-b border-zinc-200 shadow-xl max-h-[calc(100vh-5rem)] overflow-y-auto"
+            >
+              <div className="px-5 py-4 space-y-2">
+                {publicLinks.map((item) => {
+                  const isExpandable = Boolean(item.subLinks?.length) || item.name === "Sectors"
+                  const expanded = mobileExpanded === item.name
+
+                  return (
+                    <div key={item.name} className="border border-zinc-100 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between bg-zinc-50">
+                        <Link
+                          href={item.path}
+                          className={`flex-1 px-4 py-3 text-sm font-semibold ${isActive(item.path) ? "text-[#193C8D]" : "text-zinc-700"}`}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {item.name}
+                        </Link>
+
+                        {isExpandable && (
+                          <button
+                            type="button"
+                            className="px-4 py-3 text-zinc-500"
+                            onClick={() => setMobileExpanded(expanded ? null : item.name)}
+                            aria-label={`Toggle ${item.name} links`}
+                          >
+                            <ChevronRight className={`w-4 h-4 transition-transform ${expanded ? "rotate-90" : ""}`} />
+                          </button>
+                        )}
+                      </div>
+
+                      {expanded && item.subLinks?.length ? (
+                        <div className="bg-white p-2 space-y-1">
+                          {item.subLinks.map((sub) => (
+                            <Link
+                              key={sub.path}
+                              href={sub.path}
+                              className="block rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
+                              onClick={() => setMobileOpen(false)}
+                            >
+                              {sub.name}
+                            </Link>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {expanded && item.name === "Sectors" ? (
+                        <div className="bg-white p-2 grid grid-cols-1 gap-1">
+                          {KAM_SECTORS.map((sector) => (
+                            <Link
+                              key={sector.id}
+                              href={`/sectors/${sector.slug}`}
+                              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
+                              onClick={() => setMobileOpen(false)}
+                            >
+                              <span>{sector.emoji}</span>
+                              <span className="line-clamp-1">{sector.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Combined height of Top Bar (20) + Nav Bar (14) = 34 tailwind units (136px) */}
-      <div className="h-[136px] w-full" />
+      <div className="h-20 lg:h-[136px] w-full" />
     </>
   )
 }

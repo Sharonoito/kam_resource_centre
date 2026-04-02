@@ -26,21 +26,17 @@ async function getAllDocuments(canViewAll: boolean) {
   }
 }
 
-async function getGlobalPowerBiReports() {
-  return prisma.kam_content.findMany({
-    where: {
-      content_type: 'POWERBI',
-      sector_id: null,
-      is_active: true,
-      NOT: { tags: 'macro' },
-    },
-    select: { id: true, title: true, description: true, powerbi_embed: true },
-    orderBy: { id: 'asc' },
-  });
+async function getSessionSafe() {
+  try {
+    return await getServerSession(authOptions);
+  } catch (error) {
+    console.error("Failed to resolve session on sectors page", error);
+    return null;
+  }
 }
 
 export default async function SectorsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionSafe();
   const role = session?.user?.role ?? "PUBLIC";
   const canViewAll =
     role === "SUPERADMIN" ||
