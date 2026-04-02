@@ -1,4 +1,4 @@
-import { PrismaClient, ContentType, ContentVisibility, PricingTier } from '@prisma/client'
+import { PrismaClient, Prisma, ContentType, ContentVisibility, PricingTier } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
