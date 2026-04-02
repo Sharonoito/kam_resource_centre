@@ -35,6 +35,19 @@ async function getSessionSafe() {
   }
 }
 
+async function getGlobalPowerBiReports() {
+  try {
+    return await prisma.kam_content.findMany({
+      where: { content_type: "POWERBI", sector_id: null, is_active: true },
+      select: { id: true, title: true, description: true },
+      orderBy: { id: "asc" },
+    });
+  } catch (error) {
+    console.error("Error fetching Power BI reports:", error);
+    return [];
+  }
+}
+
 export default async function SectorsPage() {
   const session = await getSessionSafe();
   const role = session?.user?.role ?? "PUBLIC";
