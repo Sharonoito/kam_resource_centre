@@ -92,6 +92,9 @@ model User {
   has_subscription   Boolean    @default(false)
   created_at         DateTime   @default(now())
   updated_at         DateTime   @updatedAt
+password           String?    @db.VarChar
+  isSubscribed       Boolean?   @default(false)
+  subscriptionExpiry DateTime?  @db.Timestamptz(6)
   adminLogs          AdminLog[]
   purchases          Purchase[]
 
@@ -313,7 +316,7 @@ model document_pages {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model resource_documents {
-  id                      Int       @id @default(autoincrement())
+  id                      Int       @default(autoincrement())
   title                   String    @db.VarChar(500)
   sector                  String?   @db.VarChar(100)
   document_type           String?   @db.VarChar(100)
@@ -349,6 +352,7 @@ model resource_documents {
   @@index([sharepoint_file_id], map: "idx_rd_sp_file_id")
   @@index([tags], map: "idx_rd_tags", type: Gin)
   @@index([year], map: "idx_rd_year")
+  @@ignore
   @@schema("sector")
 }
 
@@ -779,6 +783,15 @@ view v_documents_admin {
   download_url       String?
 
   @@schema("sector")
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  KAM_MEMBER
+  PUBLIC
+
+  @@schema("public")
 }
 
 enum ContentType {

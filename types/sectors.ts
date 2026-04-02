@@ -5,7 +5,9 @@ export interface HsSection {
   name: string;
   path: string;        // Route slug, e.g. "/sections/i-live-animals"
   description: string;
+  hsCodeRange?: string; // Optional HS code range e.g. "01-05"
 }
+
 
 export interface KamSector {
   id: number;
@@ -196,124 +198,10 @@ export const mapDbSectorToId = (dbSector: string | null | undefined): number | n
   return null;
 };
 
-// // types/sectors.ts
+/**
+ * Extract section slug from HSSection path (e.g. "/sections/i-live-animals" → "i-live-animals")
+ */
+export const getSectionSlug = (sectionPath: string): string => {
+  return sectionPath.split('/').pop() || '';
+};
 
-// export interface KamSector {
-//   id: number;
-//   name: string;
-//   icon: string;
-//   sections: string[];
-//   hsChapters?: string;
-// }
-
-// export const KAM_SECTORS: KamSector[] = [
-//   { 
-//     id: 1, 
-//     name: "Agriculture and Food Processing", 
-//     icon: "agriculture", 
-//     sections: ["Live Animals", "Vegetable Products", "Fats and Oils", "Prepared Foodstuffs"],
-//     hsChapters: "1-15"
-//   },
-//   { 
-//     id: 2, 
-//     name: "Food and Beverages", 
-//     icon: "restaurant", 
-//     sections: ["Prepared Foodstuffs"],
-//     hsChapters: "21-22"
-//   },
-//   { 
-//     id: 3, 
-//     name: "Timber Sector", 
-//     icon: "forest", 
-//     sections: ["Wood and Articles of Wood"],
-//     hsChapters: "44-46"
-//   },
-//   { 
-//     id: 4, 
-//     name: "Leather and Footwear", 
-//     icon: "shopping_bag", 
-//     sections: ["Raw Hides", "Skins", "Leather", "Footwear"],
-//     hsChapters: "41-43, 64"
-//   },
-//   { 
-//     id: 5, 
-//     name: "Textiles and Apparel", 
-//     icon: "checkroom", 
-//     sections: ["Textiles and Textile Articles"],
-//     hsChapters: "50-63"
-//   },
-//   { 
-//     id: 6, 
-//     name: "Plastics and Rubber", 
-//     icon: "layers", 
-//     sections: ["Plastics and Rubber"],
-//     hsChapters: "39-40"
-//   },
-//   { 
-//     id: 7, 
-//     name: "Pharmaceutical Sector", 
-//     icon: "medication", 
-//     sections: ["Chemical Products", "Optical", "Medical Instruments"],
-//     hsChapters: "30, 90"
-//   },
-//   { 
-//     id: 8, 
-//     name: "Paper Sector", 
-//     icon: "description", 
-//     sections: ["Pulp", "Paper and Paperboard"],
-//     hsChapters: "47-49"
-//   },
-//   { 
-//     id: 9, 
-//     name: "Metal and Allied", 
-//     icon: "construction", 
-//     sections: ["Base Metals and Articles of Base Metal"],
-//     hsChapters: "72-83"
-//   },
-//   { 
-//     id: 10, 
-//     name: "Chemicals and Allied", 
-//     icon: "science", 
-//     sections: ["Chemical Products"],
-//     hsChapters: "28-38"
-//   },
-//   { 
-//     id: 11, 
-//     name: "Energy and Electricals", 
-//     icon: "bolt", 
-//     sections: ["Machinery", "Mechanical Appliances", "Electrical Equipment"],
-//     hsChapters: "27, 83-85"
-//   },
-//   { 
-//     id: 12, 
-//     name: "Building, Mining and Construction", 
-//     icon: "apartment", 
-//     sections: ["Mineral Products", "Stone", "Plaster", "Cement", "Glassware"],
-//     hsChapters: "25-26, 68-70, 78"
-//   },
-//   { 
-//     id: 13, 
-//     name: "Automotive Sector", 
-//     icon: "directions_car", 
-//     sections: ["Vehicles", "Aircraft", "Vessels", "Transport Equipment"],
-//     hsChapters: "87"
-//   }
-// ];
-
-// /**
-//  * Maps raw database sector strings to official KAM IDs
-//  */
-// export const mapDbSectorToId = (dbSector: string | null | undefined): number | null => {
-//   if (!dbSector) return null;
-  
-//   const sector = dbSector.toLowerCase();
-  
-//   if (sector.includes("sugar") || sector.includes("agriculture")) return 1;
-//   if (sector.includes("food") || sector.includes("beverage")) return 2;
-//   if (sector.includes("timber")) return 3;
-//   if (sector.includes("leather")) return 4;
-//   if (sector.includes("automotive")) return 13;
-//   if (sector.includes("general")) return 0; // Internal reference for general docs
-  
-//   return null;
-// };

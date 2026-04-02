@@ -1,13 +1,28 @@
-# Trade Resource Intelligence Page
+# Restore Working Login Plan
 
-**Information Gathered:**
-- kra/page.tsx: Header, sidebar filters/search, PowerBI iframe (2/3), insights (1/3), table pagination.
-- PageSizeSelector.tsx: Rows selector client component.
-- KraCharts.tsx: Highcharts column (revenue by month), pie (declaration types).
-- Schema: No "trade" schema - use sector.resource_documents (title, sector, document_type, publisher, year, filename, file_size_bytes, is_published, is_active, created_at).
-- vDocumentsAdmin view for table.
+## Steps:
 
-**Plan:**
-1. app/research/trade/page.tsx: Clone kra/page.tsx, replace ICMS with resource_documents queries (year, document_type, publisher filters/search).
-2. Copy app/research/kra/PageSizeSelector.tsx → trade/PageSizeSelector.tsx.
-3
+### 1. [ ] Check current users and passwords
+Run: `tsx tmp-list-users.ts`
+- Note any users with role != SUPERADMIN and hasPassword: SET
+
+### 2. [ ] Restore signin page form
+Edit app/auth/signin/page.tsx with complete NextAuth login form.
+
+### 3. [ ] Set test password if needed
+If no suitable user with password from step 1:
+Run: `tsx tmp-set-test-password.ts`
+
+### 4. [ ] Verify .env.local
+- Ensure NEXTAUTH_SECRET exists (generate with `openssl rand -base64 32`)
+
+### 5. [ ] Prisma sync (if schema changes)
+`npx prisma db push`
+
+### 6. [ ] Test
+- `npm run dev`
+- Go to /auth/signin
+- Login with creds from step 3
+- Access /member or /admin if role allows
+
+**Current: Starting step 1**

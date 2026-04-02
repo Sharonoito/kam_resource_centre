@@ -1,3 +1,34 @@
+// Fetch a single Power BI report by id (for the full-screen viewer)
+export async function getPowerBiReportById(id: number) {
+  return prisma.kam_content.findFirst({
+    where: { id, content_type: 'POWERBI', is_active: true },
+    select: { id: true, title: true, description: true, powerbi_embed: true, powerbi_url: true },
+  });
+}
+
+// Fetch Power BI reports for a sector (and its sections)
+export async function fetchSectorPowerBiReports(sectorId: number, sectionNames: string[] = []) {
+  // Optionally, you can also filter by sub_sector_id if needed
+  return prisma.kam_content.findMany({
+    where: {
+      sector_id: sectorId,
+      content_type: 'POWERBI',
+      is_active: true,
+    },
+    select: {
+      id: true,
+      title: true,
+      sector_id: true,
+      sub_sector_id: true,
+      powerbi_embed: true,
+      powerbi_url: true,
+      description: true,
+      tags: true,
+    },
+    orderBy: { created_at: 'desc' }
+  });
+}
+// lib/documents.ts - Grouped sector.v_documents_admin query +
 // lib/documents.ts - Grouped sector.v_documents_admin query +
 //                    resource_documents fetch functions for RBAC-aware routing
 import prisma from './prisma'

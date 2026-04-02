@@ -57,19 +57,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/unauthorized", req.url))
   }
 
-  // Public users without subscription cannot access member library.
+  // Allow all authenticated users to access /member (dashboard), regardless of subscription status.
   if (pathname.startsWith("/member")) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/api/auth/signin", req.url)
       loginUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(loginUrl)
     }
-
-    if (accessTier === "PUBLIC_FREE_ONLY") {
-      const deniedUrl = new URL("/unauthorized", req.url)
-      deniedUrl.searchParams.set("reason", "subscription_required")
-      return NextResponse.redirect(deniedUrl)
-    }
+    // No subscription check here; all authenticated users can access dashboard
   }
 
   return NextResponse.next()

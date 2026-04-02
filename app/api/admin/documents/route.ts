@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
@@ -15,27 +16,27 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const skip = (page - 1) * limit
 
-    // Using Prisma Client for GET is cleaner than Raw SQL if your schema is generated
-    const where: any = {
-      is_active: isActive,
-    }
-
+    const filterConditions: Prisma.Sql[] = [Prisma.sql`is_active = ${isActive}`]
     if (sector) {
-      where.sector = {
-        contains: sector,
-        mode: 'insensitive',
-      }
+      filterConditions.push(Prisma.sql`sector ILIKE ${`%${sector}%`}`)
     }
+    const whereClause = Prisma.sql`WHERE ${Prisma.join(filterConditions, ' AND ')}`
 
-    const [documents, total] = await Promise.all([
-      prisma.v_documents_admin.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { title: 'asc' },
-      }),
-      prisma.v_documents_admin.count({ where }),
+    const [documents, totalRows] = await Promise.all([
+      prisma.$queryRaw<typeof prisma.v_documents_admin[]>`
+        SELECT * FROM v_documents_admin
+        ${whereClause}
+        ORDER BY title ASC
+        LIMIT ${limit}
+        OFFSET ${skip}
+      `,
+      prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*) as count FROM v_documents_admin
+        ${whereClause}
+      `,
     ])
+
+    const total = Number(totalRows[0]?.count ?? 0)
 
     return NextResponse.json({ documents, total, page, limit })
   } catch (error) {

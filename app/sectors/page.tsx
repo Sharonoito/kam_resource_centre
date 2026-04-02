@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
+import { BarChart3 } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -37,14 +38,13 @@ async function getSessionSafe() {
 export default async function SectorsPage() {
   const session = await getSessionSafe();
   const role = session?.user?.role ?? "PUBLIC";
-  const accessTier = session?.user?.accessTier ?? "PUBLIC_FREE_ONLY";
   const canViewAll =
     role === "SUPERADMIN" ||
     role === "ADMIN" ||
-    role === "MEMBER" ||
-    accessTier === "PUBLIC_FULL";
+    role === "MEMBER";
 
   const allDocs = await getAllDocuments(canViewAll);
+  const globalReports = await getGlobalPowerBiReports();
 
   // Count resources per sector using the same OR logic as the detail page:
   //   sector column == KAM sector name  OR  sector column == any sectionsData name
@@ -146,6 +146,42 @@ export default async function SectorsPage() {
         </div>
       </section>
 
+      {/* Global Power BI Reports */}
+      {globalReports.length > 0 && (
+        <section className="py-16 bg-[#0B1E3A]">
+          <div className="container mx-auto px-6">
+            <div className="mb-8">
+              <span className="text-[10px] font-black text-[#E7B947] uppercase tracking-widest">Power BI Dashboards</span>
+              <h2 className="text-2xl font-bold text-white mt-1">Manufacturing Exports Intelligence</h2>
+              <p className="text-sm text-blue-200/60 mt-1">Interactive dashboards covering all KAM sectors</p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-6">
+              {globalReports.map((report) => (
+                <div key={report.id} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#E7B947]/40 transition-all group">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-[#E7B947]/10 rounded-xl shrink-0">
+                      <BarChart3 className="w-6 h-6 text-[#E7B947]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-white text-sm mb-1">{report.title}</h3>
+                      {report.description && (
+                        <p className="text-xs text-blue-200/50 mb-4 line-clamp-2">{report.description}</p>
+                      )}
+                      <Link
+                        href={`/sectors/report/${report.id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#E7B947] text-[#0B1E3A] text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-yellow-300 transition-colors"
+                      >
+                        <BarChart3 className="w-3 h-3" /> View Report
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Dynamic Summary Stats */}
       <section className="py-12 bg-white border-t border-zinc-100">
         <div className="container mx-auto px-6">
@@ -167,126 +203,4 @@ export default async function SectorsPage() {
     </div>
   );
 }
-
-
-// import Link from "next/link";
-// import prisma from "@/lib/prisma";
-
-// // Static generation for better performance
-// export const dynamic = "force-dynamic";
-
-// async function getSectors() {
-//   try {
-//     const sectors = await prisma.kam_sector.findMany({
-//       where: { is_active: true },
-//       include: {
-//         _count: {
-//           select: {
-//             contents: {
-//               where: { is_active: true }
-//             }
-//           }
-//         }
-//       },
-//       orderBy: { sort_order: "asc" }
-//     });
-//     return sectors;
-//   } catch (error) {
-//     console.error("Error fetching sectors:", error);
-//     return [];
-//   }
-// }
-
-// export default async function SectorsPage() {
-//   const sectors = await getSectors();
-
-//   return (
-//     <div className="min-h-screen bg-gray-50">
-//       {/* Hero Section */}
-//       <section className="bg-[#193C8D] text-white py-20 relative overflow-hidden">
-//         <div className="absolute inset-0 opacity-10">
-//           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/african-pattern.png')]" />
-//         </div>
-//         <div className="container mx-auto px-6 relative z-10">
-//           <div className="max-w-3xl">
-//             <h1 className="text-4xl lg:text-5xl font-serif font-bold mb-6">
-//               Kenya&apos;s Industrial Sectors
-//             </h1>
-//             <p className="text-xl text-gray-300 leading-relaxed">
-//               Explore KAM&apos;s 13 manufacturing sectors. Access sector-specific reports, 
-//               Power BI analytics, and trade data to drive your business decisions.
-//             </p>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Sectors Grid */}
-//       <section className="py-16">
-//         <div className="container mx-auto px-6">
-//           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-//             {sectors.map((sector: { id: number; slug: string; icon?: string | null; color?: string | null; name: string; description?: string | null; _count: { contents: number } }) => (
-//               <Link
-//                 key={sector.id}
-//                 href={`/sectors/${sector.slug}`}
-//                 className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200"
-//               >
-//                 <div className="flex items-start gap-4">
-//                   <div 
-//                     className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0"
-//                     style={{ backgroundColor: `${sector.color}20` }}
-//                   >
-//                     {sector.icon}
-//                   </div>
-//                   <div className="flex-1 min-w-0">
-//                     <h3 className="text-lg font-bold text-[#0B1E3A] group-hover:text-[#E7B947] transition-colors mb-2">
-//                       {sector.name}
-//                     </h3>
-//                     <p className="text-sm text-gray-600 line-clamp-2">
-//                       {sector.description}
-//                     </p>
-//                     <div className="mt-4 flex items-center gap-4 text-xs">
-//                       <span className="flex items-center gap-1 text-gray-500">
-//                         <span className="w-2 h-2 rounded-full bg-[#E7B947]" />
-//                         {sector._count.contents} Resources
-//                       </span>
-//                       <span className="text-[#193C8D] font-medium group-hover:translate-x-1 transition-transform">
-//                         View Sector →
-//                       </span>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </Link>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Quick Stats */}
-//       <section className="py-12 bg-white border-t">
-//         <div className="container mx-auto px-6">
-//           <div className="grid md:grid-cols-4 gap-8 text-center">
-//             <div>
-//               <p className="text-3xl font-bold text-[#E7B947]">{sectors.length}</p>
-//               <p className="text-sm text-gray-600 mt-1">Active Sectors</p>
-//             </div>
-//             <div>
-//               <p className="text-3xl font-bold text-[#193C8D]">
-//                 {sectors.reduce((acc: number, s: { _count: { contents: number } }) => acc + s._count.contents, 0)}
-//               </p>
-//               <p className="text-sm text-gray-600 mt-1">Total Resources</p>
-//             </div>
-//             <div>
-//               <p className="text-3xl font-bold text-[#E7B947]">PDF</p>
-//               <p className="text-sm text-gray-600 mt-1">Reports Available</p>
-//             </div>
-//             <div>
-//               <p className="text-3xl font-bold text-[#193C8D]">Power BI</p>
-//               <p className="text-sm text-gray-600 mt-1">Interactive Dashboards</p>
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-//     </div>
-//   );
-// }
 
