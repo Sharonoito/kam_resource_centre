@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     depends_on: [postgres, keycloak, minio]
     environment:
-      DATABASE_URL: postgresql://postgres:KamSecure123@postgres:5432/kamresourcecenter_dev
+      DATABASE_URL: ${DATABASE_URL}
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: kam
       POWERBI_CLIENT_ID: ${POWERBI_CLIENT_ID}
@@ -27,7 +27,7 @@ services:
     environment:
       POSTGRES_DB: kamresourcecenter_dev
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: KamSecure123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -37,11 +37,11 @@ services:
       - "8080:8080"
     environment:
       KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: KamSecure123
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/kamresourcecenter_dev
       KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: KamSecure123
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
 
   minio:
     image: minio/minio

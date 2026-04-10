@@ -8,9 +8,9 @@ const prisma = new PrismaClient();
       sharepoint_download_url: webUrl
     }
   });
-  console.log('Updated resource_documents#12:', updatedRes);
+  // console.log('Updated resource_documents#12:', updatedRes);
   const doc = await prisma.vDocumentsAdmin.findUnique({where:{id:12}, select:{download_url:true}});
-  console.log('Current vDocumentsAdmin download_url:', doc);
+  // console.log('Current vDocumentsAdmin download_url:', doc);
   await prisma.$disconnect();
   process.exit(0);
 })().catch(console.error);

@@ -1,26 +1,24 @@
 // types/sectors.ts
 
 export interface HsSection {
-  id: string;          // Roman numeral, e.g. "I", "VIII"
+  id: string;
   name: string;
-  path: string;        // Route slug, e.g. "/sections/i-live-animals"
+  path: string;
   description: string;
-  hsCodeRange?: string; // Optional HS code range e.g. "01-05"
+  hsCodeRange?: string;
 }
-
 
 export interface KamSector {
   id: number;
   name: string;
-  slug: string;        // Added for Next.js routing
-  emoji: string;       // For the visual grid
-  color: string;       // For background accents
+  slug: string;
+  emoji: string;
+  color: string;
   sections: string[];
   hsChapters: string;
   sectionsData: HsSection[];
 }
 
-/** Full catalogue of all 21 HS Sections (shared reference). */
 export const HS_SECTIONS: Record<string, HsSection> = {
   I:    { id: "I",    name: "Live Animals & Products",  path: "/sections/i-live-animals",       description: "Animals and animal products" },
   II:   { id: "II",   name: "Vegetable Products",       path: "/sections/ii-vegetable-products", description: "Agricultural and plant goods" },
@@ -45,9 +43,9 @@ export const HS_SECTIONS: Record<string, HsSection> = {
   XXI:  { id: "XXI",  name: "Art & Antiques",           path: "/sections/xxi-art-antiques",      description: "Artworks and antiques" },
 };
 
-const s = HS_SECTIONS; // shorthand for sector definitions below
+const s = HS_SECTIONS;
 
-export const KAM_SECTORS: KamSector[] = [
+export const HS_SECTORS_ONLY: KamSector[] = [
   { 
     id: 1, 
     name: "Agriculture and Food Processing", 
@@ -180,9 +178,53 @@ export const KAM_SECTORS: KamSector[] = [
   },
 ];
 
-/**
- * Maps raw database sector strings to official KAM IDs
- */
+export const NAV_SECTORS: KamSector[] = [
+  { 
+    id: -1, 
+    name: "Research Hub", 
+    slug: "research",
+    emoji: "🔬",
+    color: "#3b82f6",
+    sections: ["Barometer", "Data Hub", "Macro Data"],
+    hsChapters: "N/A",
+    sectionsData: [],
+  },
+  { 
+    id: -2, 
+    name: "Trade Hub", 
+    slug: "trade",
+    emoji: "🌍",
+    color: "#10b981",
+    sections: ["Free Trade Areas", "Customs"],
+    hsChapters: "N/A", 
+    sectionsData: [],
+  },
+  { 
+    id: -3, 
+    name: "Tax Hub", 
+    slug: "tax",
+    emoji: "₵",
+    color: "#ef4444",
+    sections: ["Performance Reports", "Trends"],
+    hsChapters: "N/A", 
+    sectionsData: [],
+  },
+  { 
+    id: -4, 
+    name: "Publications", 
+    slug: "publications",
+    emoji: "📚",
+    color: "#8b5cf6",
+    sections: ["Reports", "Profiles"],
+    hsChapters: "N/A", 
+    sectionsData: [],
+  }
+];
+
+export const ALL_SECTORS: KamSector[] = [...NAV_SECTORS, ...HS_SECTORS_ONLY];
+
+export const KAM_SECTORS: KamSector[] = HS_SECTORS_ONLY;
+
 export const mapDbSectorToId = (dbSector: string | null | undefined): number | null => {
   if (!dbSector) return null;
   
@@ -193,14 +235,13 @@ export const mapDbSectorToId = (dbSector: string | null | undefined): number | n
   if (sector.includes("timber")) return 3;
   if (sector.includes("leather")) return 4;
   if (sector.includes("automotive")) return 13;
+  if (sector.includes("research")) return -1;
+  if (sector.includes("trade")) return -2;
   if (sector.includes("general")) return 0; 
   
   return null;
 };
 
-/**
- * Extract section slug from HSSection path (e.g. "/sections/i-live-animals" → "i-live-animals")
- */
 export const getSectionSlug = (sectionPath: string): string => {
   return sectionPath.split('/').pop() || '';
 };

@@ -1,3 +1,19 @@
+// Fetch all resources tagged for Research/KRA (PDF, Power BI, etc.)
+export async function fetchKRAResearchResources(): Promise<any[]> {
+  // This fetches all resources where tags or section includes 'Research', 'KRA', or 'Customs Data Hub'
+  return prisma.kam_content.findMany({
+    where: {
+      is_active: true,
+      OR: [
+        { tags: { contains: "Research", mode: "insensitive" } },
+        { tags: { contains: "KRA", mode: "insensitive" } },
+        { tags: { contains: "Customs Data Hub", mode: "insensitive" } },
+        { tags: { contains: "Trade Intelligence", mode: "insensitive" } },
+      ],
+    },
+    orderBy: { created_at: "desc" },
+  });
+}
 // Fetch a single Power BI report by id (for the full-screen viewer)
 export async function getPowerBiReportById(id: number) {
   return prisma.kam_content.findFirst({

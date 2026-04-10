@@ -1,26 +1,45 @@
-# PowerBI Sector Integration TODO
+# Trade PowerBI Admin Upload Enablement
+Status: 🚀 In Progress | Priority: High
 
-## [ ] 1. Diagnose Current State
-- Execute `diagnose-powerbi.sql`
-- Confirm: Agriculture sector_id=1 exists, 0 POWERBI kam_content records
+## Breakdown of Approved Plan
 
-## [ ] 2. Insert PowerBI Records  
-- Execute `insert-powerbi-agriculture.sql` (4 HS sections: Live Animals, Vegetables, Fats/Oils, Foodstuffs)
-- Records get unique slugs, PUBLIC visibility, hardcoded embed URLs
+### ✅ Step 1: Ensure Trade Sector Exists (DB Setup)
+- [x] Create migration: Ensure `kam_sector` id=-5 ("Trade Hub")
+```
+INSERT INTO public.kam_sector (id, name, slug, is_active) 
+VALUES (-5, 'Trade Hub', 'trade-hub', true) 
+ON CONFLICT (id) DO NOTHING;
+```
 
-## [ ] 3. Verify Database
-- Re-run diagnose queries
-- Check: 4 new kam_content with content_type='POWERBI', sector_id=1
+### ✅ Step 2: Create TradeContent Component
+```
+app/trade/TradeContent.tsx
+```
+- [x] Copy TaxContent.tsx → Adapt colors/branding for Trade (blue/orange)
 
-## [ ] 4. Frontend Test
-- `npx prisma generate`
-- Restart dev server (`npm run dev`)
-- Visit `/sectors/agriculture` → See PowerBI cards under HS sections I-IV
+### ✅ Step 3: Update Trade Page 
+```
+app/trade/page.tsx  
+```
+- [x] Replace PDF UI → Fetch kam_content sector_id=-5 like tax/page.tsx
+- [x] Use TradeContent component
+- [x] Preserved header/search/sidebar/pagination (SharePoint preserved in comments)
 
-## [ ] 5. Scale to All Sectors (Optional)
-- Repeat for other KAM_SECTORS (e.g., automotive=13, leather=4)
-- Use same embed base URL + section-specific pageNames
+### ✅ Step 4: Test Manual Admin Flow
+```
+1. npx prisma db execute --file=trade-sector.sql
+2. Navigate /admin/upload
+3. Select GENERAL_GLOBAL → generalNav="trade"
+4. Add PowerBI report → POST /api/admin/resources
+5. Verify appears at /trade with PowerBI cards
+```
+- Status: Post-implementation
 
-**Expected Result**: PowerBI dashboards visible exactly like PDFs, grouped by HS sections, embedded via PowerBiEmbed component.
+## Success Criteria
+- ✅ Admin can manually add PowerBI/PDF to Trade via /admin/upload
+- ✅ New reports appear at /trade with proper PowerBI display  
+- ✅ Existing Trade SharePoint PDFs preserved (no regression)
+- ✅ No code duplication, minimal changes to working features
 
-**All hardcoded PowerBI links from SQL files will be persisted in kam_content.powerbi_embed**
+**Next Action:** Execute Steps 2-3 → Mark complete → Test Step 4
+
