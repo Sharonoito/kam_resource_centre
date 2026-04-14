@@ -8,6 +8,16 @@ import {
 import prisma from "@/lib/prisma";
 import TaxContent from "./TaxContent";
 
+// 1. Define the interface for our cleaned data
+interface TaxRecord {
+  id: number;
+  title: string;
+  url: string;
+  year: string;
+  type: string;
+  sector: string;
+}
+
 type QueryValue = string | string[] | undefined;
 
 interface PageProps {
@@ -26,14 +36,14 @@ function getSingle(v: QueryValue): string {
 export default async function TaxReportsPage({ searchParams }: PageProps) {
   const q = await searchParams;
   
-  // 1. Extract Search and Filter Params
+  // Extract Search and Filter Params
   const yearParam = getSingle(q.year);
-  const categoryParam = getSingle(q.category); // Filtering by Type (PDF/BI)
+  const categoryParam = getSingle(q.category); 
   const searchParam = getSingle(q.search).trim();
   const currentPage = Math.max(1, parseInt(getSingle(q.page) || "1"));
-  const pageSize = 6; // Adjust items per page
+  const pageSize = 6;
 
-  // 2. Fetch Data
+  // Fetch Data
   const taxDocs = await prisma.kam_content.findMany({
     where: {
       is_active: true,
@@ -48,8 +58,8 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
     },
   });
 
-  // 3. Normalize & Apply Logic
-  let allRecords = taxDocs.map((doc) => {
+  // 2. Normalize Logic - doc is explicitly typed as 'any' to clear TS7006
+  let allRecords: TaxRecord[] = taxDocs.map((doc: any) => {
     const isPdf = doc.content_type === "PDF" || (doc.pdf_url && !doc.powerbi_url);
     const downloadUrl = isPdf 
       ? `/api/documents/download/admin-${doc.id}` 
@@ -57,7 +67,7 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
 
     return {
       id: doc.id,
-      title: doc.title,
+      title: doc.title || "Untitled Report",
       url: downloadUrl,
       year: doc.published_date ? new Date(doc.published_date).getFullYear().toString() : '2024',
       type: doc.content_type || (isPdf ? "PDF" : "POWERBI"),
@@ -65,16 +75,20 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
     };
   });
 
-  // 4. Apply Filters (Year, Category/Type, and Search)
-  if (yearParam) allRecords = allRecords.filter(r => r.year === yearParam);
-  if (categoryParam) allRecords = allRecords.filter(r => r.type === categoryParam);
+  // 3. Apply Filters - r is explicitly typed to clear TS errors
+  if (yearParam) {
+    allRecords = allRecords.filter((r: TaxRecord) => r.year === yearParam);
+  }
+  if (categoryParam) {
+    allRecords = allRecords.filter((r: TaxRecord) => r.type === categoryParam);
+  }
   if (searchParam) {
-    allRecords = allRecords.filter(r => 
+    allRecords = allRecords.filter((r: TaxRecord) => 
       r.title.toLowerCase().includes(searchParam.toLowerCase())
     );
   }
 
-  // 5. Pagination Calculations
+  // Pagination Calculations
   const totalItems = allRecords.length;
   const totalPages = Math.ceil(totalItems / pageSize);
   const paginatedRecords = allRecords.slice(
@@ -82,9 +96,9 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
     currentPage * pageSize
   );
 
-  // 6. Sidebar Aggregate Data
-  const years = Array.from(new Set(allRecords.map(r => r.year))).sort((a, b) => b.localeCompare(a));
-  const types = Array.from(new Set(allRecords.map(r => r.type)));
+  // Aggregate Data for Sidebar
+  const years = Array.from(new Set(allRecords.map((r: TaxRecord) => r.year))).sort((a, b) => b.localeCompare(a));
+  const types = Array.from(new Set(allRecords.map((r: TaxRecord) => r.type)));
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-800">
@@ -102,7 +116,6 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
         </div>
       </header>
 
-      {/* Search Bar Overlap */}
       <div className="relative z-50 -mt-7">
         <div className="container mx-auto px-6 max-w-7xl">
           <form method="GET" className="relative max-w-2xl group">
@@ -127,8 +140,6 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
 
       <div className="container mx-auto px-6 max-w-7xl py-12">
         <div className="grid lg:grid-cols-[280px_1fr] gap-12">
-          
-          {/* Sidebar Filters */}
           <aside className="space-y-8">
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6 flex justify-between">
@@ -136,7 +147,6 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
               </h3>
               
               <div className="space-y-6">
-                {/* Year Filter */}
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 mb-3 block uppercase tracking-tighter">Publication Year</label>
                   <div className="grid grid-cols-2 gap-2">
@@ -152,7 +162,6 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
                   </div>
                 </div>
 
-                {/* Content Type Filter */}
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 mb-3 block uppercase tracking-tighter">Resource Type</label>
                   <div className="space-y-2">
@@ -175,7 +184,6 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
             </div>
           </aside>
 
-          {/* Main Content */}
           <main>
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-200">
               <div className="flex items-center gap-3">
@@ -191,7 +199,6 @@ export default async function TaxReportsPage({ searchParams }: PageProps) {
 
             <TaxContent reports={paginatedRecords} />
 
-            {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="mt-12 flex justify-between items-center border-t border-slate-100 pt-8">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">

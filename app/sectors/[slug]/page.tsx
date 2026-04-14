@@ -1,4 +1,5 @@
-import { KAM_SECTORS } from '@/types/sectors';
+
+import { HS_SECTORS_ONLY } from '@/types/sectors';
 import SectorContent from './SectorContent';
 import { notFound } from 'next/navigation';
 import { fetchSectorDocuments, fetchSectorPowerBiReports } from '@/lib/documents';
@@ -12,7 +13,9 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { slug } = await params;
-  const sector = KAM_SECTORS.find(s => s.slug === slug);
+  
+  // Updated to use the correct specialized export
+  const sector = HS_SECTORS_ONLY.find(s => s.slug === slug);
 
   if (!sector) notFound();
 
@@ -24,7 +27,6 @@ export default async function Page({ params }: Props) {
   const resources = await fetchSectorDocuments(dbSectorName, sector.sectionsData.map(s => s.name));
 
   // 2. Fetch from kam_content (Admin uploads)
-  // Cleaned up selection to strictly match verified Prisma schema fields
   const adminResources = await prisma.kam_content.findMany({
     where: {
       is_active: true,
@@ -52,14 +54,11 @@ export default async function Page({ params }: Props) {
     ...resources,
     ...adminResources.map((doc) => ({
       ...doc,
-      // Normalizing fields for the UI/SectorContent component
       file_name: doc.title, 
       sector: sector.name,
-      // Use pdf_url for the link since filename/download_url don't exist
       sharepoint_download_url: doc.pdf_url || '#',
       mime_type: 'application/pdf',
       document_type: 'PDF',
-      // Deriving year and publisher from existing fields
       year: doc.published_date ? new Date(doc.published_date).getFullYear() : 'N/A',
       publisher: doc.author || 'KAM',
     })),
@@ -81,9 +80,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[#F8F9FC]">
-      {/* Page header */}
       <div className="bg-[#193C8D] text-white">
-        {/* Breadcrumb */}
         <div className="container mx-auto px-6 pt-4 pb-0">
           <nav className="flex items-center gap-1.5 text-[11px] text-blue-200/70">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
@@ -133,7 +130,6 @@ export default async function Page({ params }: Props) {
     </div>
   );
 }
-
 
 // import { KAM_SECTORS } from '@/types/sectors';
 // import SectorContent from './SectorContent';

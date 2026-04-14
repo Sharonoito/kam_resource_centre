@@ -48,7 +48,8 @@ export async function fetchSectorPowerBiReports(sectorId: number, sectionNames: 
 // lib/documents.ts - Grouped sector.v_documents_admin query +
 //                    resource_documents fetch functions for RBAC-aware routing
 import prisma from './prisma'
-import { Prisma } from '@prisma/client'
+// import { Prisma } from '@prisma/client' // No longer needed
+// Use only Prisma.sql, Prisma.join, and Prisma.empty for compatibility
 // No Prisma type import needed for raw query
 
 // ---------------------------------------------------------------------------
@@ -56,6 +57,7 @@ import { Prisma } from '@prisma/client'
 // ---------------------------------------------------------------------------
 
 export interface ResourceDocument {
+  content_type: string;
   id: number
   filename: string
   title: string
@@ -116,20 +118,23 @@ export async function fetchSectorDocuments(
 ): Promise<ResourceDocument[]> {
   const normalizedSections = sectionNames
     .map((name) => name.trim().toLowerCase())
-    .filter(Boolean)
+    .filter(Boolean);
 
-  const sectionFilter = normalizedSections.length
-    ? Prisma.sql` OR LOWER(sector) IN (${Prisma.join(normalizedSections)})`
-    : Prisma.empty
+  let sectionFilter = '';
+  if (normalizedSections.length) {
+    const sectionList = normalizedSections.map(s => `'${s.replace(/'/g, "''")}'`).join(', ');
+    sectionFilter = ` OR LOWER(sector) IN (${sectionList})`;
+  }
 
-  return prisma.$queryRaw<ResourceDocument[]>`
+  const query = `
     SELECT DISTINCT id, filename, title, sector, document_type,
            sharepoint_download_url, mime_type, year, publisher, created_at
     FROM sector.resource_documents
     WHERE is_active = TRUE AND is_published = TRUE
-      AND (LOWER(sector) = LOWER(${sectorName}) ${sectionFilter})
+      AND (LOWER(sector) = LOWER('${sectorName.replace(/'/g, "''")}')${sectionFilter})
     ORDER BY created_at DESC
-  `
+  `;
+  return prisma.$queryRawUnsafe(query);
 }
 
 // ---------------------------------------------------------------------------

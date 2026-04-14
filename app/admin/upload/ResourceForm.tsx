@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { KAM_SECTORS, HsSection } from "@/types/sectors"
+import { HS_SECTORS_ONLY, HsSection } from "@/types/sectors"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, CheckCircle2, Database, ExternalLink, Eye, Link2, UploadCloud, Info } from "lucide-react"
 
@@ -40,7 +40,7 @@ const GENERAL_NAV_OPTIONS = [
     label: "Research Hub",
     value: "research",
     subLinks: [
-      { label: "Industrial Barometer", value: "barometer" },
+      { label: " Manufacturing Barometer ", value: "barometer" },
       { label: "Data Hub", value: "kra" },
       { label: "Macro-Economic Data", value: "macro" },
     ],
@@ -72,7 +72,8 @@ const isValidDownloadUrl = (value: string) => {
 
 export default function ResourceForm() {
   const [resourceCategory, setResourceCategory] = useState<ResourceCategory>("SECTOR_SPECIFIC")
-  const [sectorSlug, setSectorSlug] = useState<string>(KAM_SECTORS[0]?.slug ?? "")
+  // Updated default slug state
+  const [sectorSlug, setSectorSlug] = useState<string>(HS_SECTORS_ONLY[0]?.slug ?? "")
   const [isSubscription, setIsSubscription] = useState(false)
   const [subscriptionType, setSubscriptionType] = useState<'free' | 'paid'>("free")
   const [paybill, setPaybill] = useState("")
@@ -91,7 +92,8 @@ export default function ResourceForm() {
   const [generalNav, setGeneralNav] = useState("")
   const [generalSubNav, setGeneralSubNav] = useState("")
 
-  const selectedSector = useMemo(() => KAM_SECTORS.find((s) => s.slug === sectorSlug), [sectorSlug])
+  // Updated sector lookup logic
+  const selectedSector = useMemo(() => HS_SECTORS_ONLY.find((s) => s.slug === sectorSlug), [sectorSlug])
   
   const selectedGeneralNav = useMemo(() => 
     GENERAL_NAV_OPTIONS.find(opt => opt.value === generalNav), 
@@ -186,12 +188,10 @@ export default function ResourceForm() {
       formData.append("paybill", isSubscription && subscriptionType === "paid" ? paybill.trim() : "")
       formData.append("download_url", sourceMode === "LINK" ? downloadUrl.trim() : "")
       
-      // LOGIC UPDATE: Handle the Trade Hub Mapping
       let finalSectorSlug = ""
       if (resourceCategory === "SECTOR_SPECIFIC") {
         finalSectorSlug = selectedSector?.slug ?? ""
       } else if (resourceCategory === "GENERAL_GLOBAL" && generalNav === "trade") {
-        // This acts as the trigger for your backend API to set sector_id: -5
         finalSectorSlug = "TRADE_HUB_GENERAL"
       }
       formData.append("sector_slug", finalSectorSlug)
@@ -233,7 +233,6 @@ export default function ResourceForm() {
       }
 
       setSuccessMessage("Resource created successfully.")
-      // Reset form
       setTitle(""); setDescription(""); setDownloadUrl(""); setCustomTags("");
       setSelectedSectionNames([]); setFile(null); setSourceMode("LINK");
       setShowPreview(false); setIsSubscription(false); setGeneralNav(""); setGeneralSubNav("");
@@ -290,7 +289,6 @@ export default function ResourceForm() {
             </div>
           </div>
 
-          {/* General/Global navigation dropdowns */}
           {resourceCategory === "GENERAL_GLOBAL" && (
             <div className="space-y-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/30">
               <div>
@@ -309,7 +307,6 @@ export default function ResourceForm() {
                   ))}
                 </select>
                 
-                {/* Visual Mapping Feedback */}
                 {generalNav === "trade" && (
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
                     <Database className="w-4 h-4 text-blue-600" />
@@ -361,7 +358,7 @@ export default function ResourceForm() {
             <div>
               <label className="block text-sm font-semibold text-zinc-700 mb-1">Sector</label>
               <select disabled={resourceCategory === "GENERAL_GLOBAL"} value={sectorSlug} onChange={(e) => {setSectorSlug(e.target.value); setSelectedSectionNames([])}} className="w-full p-3 border border-zinc-300 rounded-lg disabled:bg-gray-100">
-                {KAM_SECTORS.map((s) => (<option key={s.slug} value={s.slug}>{s.name}</option>))}
+                {HS_SECTORS_ONLY.map((s) => (<option key={s.slug} value={s.slug}>{s.name}</option>))}
               </select>
             </div>
             <div>
@@ -369,9 +366,6 @@ export default function ResourceForm() {
               <select value={documentType} onChange={(e) => setDocumentType(e.target.value as ResourceType)} className="w-full p-3 border border-zinc-300 rounded-lg">
                 <option value="PDF">PDF</option>
                 <option value="POWERBI">POWERBI</option>
-                {/* <option value="DATABASE">DATABASE</option>
-                <option value="TRADE_DATA">TRADE_DATA</option>
-                <option value="LINK">LINK</option> */}
               </select>
             </div>
           </div>
