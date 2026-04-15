@@ -2,13 +2,13 @@
 const nextConfig = {
   output: 'standalone',
 
-experimental: {
+
+  serverExternalPackages: ['canvas', 'pdfjs-dist'],
+
+  experimental: {
     proxyClientMaxBodySize: 50 * 1024 * 1024,
-    // This prevents these heavy hitters from being bundled into your API functions
-    serverComponentsExternalPackages: ['canvas', 'pdfjs-dist'],
   },
 
-  // 4. IMAGE SETTINGS: Kept exactly as you had them for Power BI
   images: {
     remotePatterns: [
       {
