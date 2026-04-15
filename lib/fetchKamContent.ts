@@ -1,5 +1,5 @@
 import prisma from './prisma';
-import type { KamContent } from '@prisma/client';
+import type { kam_content as KamContent } from '@prisma/client';
 
 export async function fetchKamContentBySector(sectorId: number, limit = 20): Promise<KamContent[]> {
   return prisma.kam_content.findMany({

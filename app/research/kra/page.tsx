@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
-import { Database, Filter, Search, TrendingUp, Globe, BarChart3, RotateCcw, FileText, BarChart2 } from "lucide-react";
+import { Database, Filter, Search, TrendingUp, Globe, BarChart3, RotateCcw, FileText, BarChart2, Download } from "lucide-react";
 import prisma from "@/lib/prisma";
 import KraCharts from "./KraCharts";
 import PageSizeSelector from "./PageSizeSelector";
@@ -207,8 +207,13 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
                     <Link href={`/resources/${doc.raw_id}`} className="text-xs font-bold text-blue-700 hover:underline">
                       View Resource
                     </Link>
-                    {doc.pdf_url && (
-                      <a href={doc.pdf_url} download className="text-xs font-bold text-slate-400 hover:text-blue-700 flex items-center gap-1 transition-colors">
+                    {(doc.pdf_url || doc.raw_id) && (
+                      <a 
+                        href={doc.pdf_url || `/api/documents/download/${doc.raw_id}?mode=download`} 
+                        download 
+                        className="text-xs font-bold text-[#193C8D] hover:text-yellow-600 flex items-center gap-1 transition-colors"
+                      >
+                        <Download className="w-3 h-3" />
                         Download
                       </a>
                     )}

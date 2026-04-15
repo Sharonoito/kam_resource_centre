@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Download } from "lucide-react";
 import Link from "next/link";
 
 export default async function ResourceViewPage({ 
@@ -28,15 +28,27 @@ export default async function ResourceViewPage({
     // 'max-h-screen' and 'overflow-hidden' on the wrapper prevents the body from scrolling
     <div className="h-screen w-full bg-[#F1F5F9] flex flex-col overflow-hidden relative">
       
-      {/* 1. Moved the button to be fixed relative to the screen to ensure it never moves */}
-      <div className="absolute top-4 left-4 z-[100]">
+      {/* Minimal Icon-Only Buttons - Top Left Corner */}
+      <div className="absolute top-6 left-6 z-[100] flex gap-2">
         <Link 
           href="/trade" 
-          className="flex items-center gap-2 bg-[#193C8D] hover:bg-[#0B1E3A] text-white px-4 py-2 rounded-lg transition-all shadow-xl text-[10px] font-black uppercase tracking-widest border border-white/20"
+          className="p-2 bg-[#193C8D]/90 hover:bg-[#193C8D] text-white rounded-lg shadow-lg border border-white/30 transition-all hover:scale-105"
+          title="Exit Dashboard"
+          aria-label="Exit Dashboard"
         >
           <ArrowLeft size={16} />
-          Exit Dashboard
         </Link>
+        {resource.content_type === "PDF" && (
+          <a
+            href={`/api/documents/download/${resource.id}?mode=download`}
+            download={resource.title || `resource-${resource.id}.pdf`}
+            className="p-2 bg-white/90 hover:bg-white shadow-lg border border-gray-200 rounded-lg transition-all hover:scale-105"
+            title="Download PDF"
+            aria-label="Download PDF"
+          >
+            <Download size={16} className="text-[#193C8D]" />
+          </a>
+        )}
       </div>
 
       {/* 2. The Main Container uses calc to ensure it stays within the viewport minus small padding */}

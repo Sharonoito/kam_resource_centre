@@ -247,7 +247,7 @@ model document_chunks {
   char_end            Int?
   token_count         Int?
   created_at          DateTime?             @default(now()) @db.Timestamp(6)
-  resource_documents  resource_documents    @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction) @ignore
+  resource_documents  resource_documents    @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   document_embeddings document_embeddings[]
 
   @@unique([document_id, chunk_index])
@@ -263,7 +263,7 @@ model document_downloads {
   downloaded_at      DateTime?           @default(now()) @db.Timestamp(6)
   ip_address         String?             @db.VarChar(45)
   user_agent         String?
-  resource_documents resource_documents? @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction) @ignore
+  resource_documents resource_documents? @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([document_id], map: "idx_dd_document_id")
   @@schema("sector")
@@ -279,7 +279,7 @@ model document_embeddings {
   created_at         DateTime?              @default(now()) @db.Timestamp(6)
   embedding          Unsupported("vector")?
   document_chunks    document_chunks        @relation(fields: [chunk_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  resource_documents resource_documents     @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction) @ignore
+  resource_documents resource_documents     @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([chunk_id, model_name])
   @@index([chunk_id], map: "idx_de_chunk_id")
@@ -299,7 +299,6 @@ model document_ingest_log {
   resource_documents resource_documents? @relation(fields: [document_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([status], map: "idx_dil_status")
-  @@ignore
   @@schema("sector")
 }
 
@@ -311,7 +310,7 @@ model document_pages {
   page_text          String?
   char_count         Int?
   created_at         DateTime?          @default(now()) @db.Timestamp(6)
-  resource_documents resource_documents @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction) @ignore
+  resource_documents resource_documents @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([document_id, page_number])
   @@index([document_id], map: "idx_dp_document_id")
@@ -319,7 +318,6 @@ model document_pages {
   @@schema("sector")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model resource_documents {
   id                      Int                   @id @default(autoincrement())
   title                   String                @db.VarChar(500)
@@ -355,6 +353,7 @@ model resource_documents {
   document_embeddings     document_embeddings[]
   document_ingest_log     document_ingest_log[]
   document_pages          document_pages[]
+  resource_logs           resource_log[]
 
   @@index([document_type], map: "idx_rd_doc_type")
   @@index([extraction_status], map: "idx_rd_extraction")
@@ -363,7 +362,6 @@ model resource_documents {
   @@index([sharepoint_file_id], map: "idx_rd_sp_file_id")
   @@index([tags], map: "idx_rd_tags", type: Gin)
   @@index([year], map: "idx_rd_year")
-  @@ignore
   @@schema("sector")
 }
 
@@ -414,7 +412,6 @@ model ResourceDocuments {
   @@schema("trade")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model debt {
   id             BigInt   @id @default(autoincrement())
   country_iso3   String   @db.Char(3)
@@ -434,7 +431,6 @@ model debt {
   @@schema("macro_data")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model exchange_rates {
   id              BigInt   @id @default(autoincrement())
   date            DateTime @db.Date
@@ -559,7 +555,7 @@ model trade_document_downloads {
 }
 
 model trade_document_embeddings {
-  id                 Int                   @id(map: "trade_document_embeddings_pkey")
+  id                 Int                   @id(map: "trade_document_embeddings_pkey") @default(autoincrement())
   chunk_id           Int
   document_id        Int
   model_name         String                @db.VarChar(100)
@@ -662,6 +658,20 @@ model cbk_exchange_rates {
   @@index([currency_code], map: "idx_cbk_fx_currency")
   @@index([year, currency_code], map: "idx_cbk_fx_year_currency")
   @@index([year, month], map: "idx_cbk_fx_year_month")
+  @@schema("macro_data")
+}
+
+model cbk_inflation_rates {
+  id                   Int       @id @default(autoincrement())
+  year                 Int
+  month                String
+  period_date          DateTime  @db.Date
+  inflation_mom        Decimal?  @db.Decimal(8, 4)
+  inflation_annual_avg Decimal?  @db.Decimal(8, 4)
+  synced_at            DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@unique([year, month])
+  @@index([period_date], map: "idx_cbk_inf_period")
   @@schema("macro_data")
 }
 
@@ -865,6 +875,18 @@ view v_cbk_fx_latest {
   @@schema("macro_data")
 }
 
+model resource_log {
+  id          Int      @id @default(autoincrement())
+  resource_id Int
+  action_type String   @db.VarChar(20) // e.g., 'view' or 'download'
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  resource resource_documents @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+
+  @@index([resource_id])
+  @@schema("sector")
+}
+
 enum UserRole {
   SUPERADMIN
   ADMIN
@@ -874,16 +896,15 @@ enum UserRole {
   @@schema("public")
 }
 
-
-
 enum ContentType {
   PDF
   POWERBI
+  DATABASE
+  LINK
   VIDEO
   ARTICLE
   EXCEL
-  DATABASE
-  LINK
+
   @@schema("public")
 }
 
@@ -891,17 +912,15 @@ enum ContentVisibility {
   PUBLIC
   PRIVATE
   MEMBERS_ONLY
-  MEMBER   
-  ADMIN
-  
+
   @@schema("public")
 }
 
 enum PricingTier {
   FREE
-  PAID
   PREMIUM
   ENTERPRISE
+
   @@schema("public")
 }
 
@@ -909,5 +928,6 @@ enum PurchaseStatus {
   PENDING
   COMPLETED
   FAILED
+
   @@schema("public")
 }
