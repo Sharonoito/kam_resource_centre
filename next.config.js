@@ -2,8 +2,13 @@
 const nextConfig = {
   output: 'standalone',
 
-
-  serverExternalPackages: ['canvas', 'pdfjs-dist'],
+  serverExternalPackages: [
+    'canvas', 
+    'pdfjs-dist', 
+    'bcrypt', 
+    'xlsx',
+    '@prisma/engines'
+  ],
 
   experimental: {
     proxyClientMaxBodySize: 50 * 1024 * 1024,

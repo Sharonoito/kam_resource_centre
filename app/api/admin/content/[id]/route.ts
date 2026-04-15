@@ -1,4 +1,9 @@
-import prisma from '@/lib/prisma';
+// Dynamic import for Vercel bundle size optimization
+const getPrisma = async () => {
+  const { default: prisma } = await import('@/lib/prisma')
+  return prisma
+}
+
 import { NextRequest, NextResponse } from 'next/server';
 
 // Define a reusable type for the context
@@ -17,6 +22,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     }
 
     // 2. Perform deletion
+    const prisma = await getPrisma()
     await prisma.kam_content.delete({ where: { id } });
     
     return NextResponse.json({ success: true });
@@ -41,6 +47,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const { title, slug, content_type, is_active } = data;
 
     // 3. Update database
+    const prisma = await getPrisma()
     const updated = await prisma.kam_content.update({
       where: { id },
       data: { title, slug, content_type, is_active },

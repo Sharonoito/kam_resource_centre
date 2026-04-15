@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+// Dynamic import for Vercel bundle size optimization
+const getPrisma = async () => {
+  const { default: prisma } = await import('@/lib/prisma')
+  return prisma
+}
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import fs from 'node:fs'
@@ -33,6 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Get sector (Uses camelCase 'slug' because that's in your schema)
+    const prisma = await getPrisma()
     const sector = await prisma.kam_sector.findUnique({
       where: { slug: sectorSlug }
     })
