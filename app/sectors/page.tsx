@@ -127,8 +127,8 @@ export default async function SectorsPage() {
                     className="group relative bg-white border border-slate-200 rounded-3xl p-8 hover:border-[#193C8D] transition-all duration-500 hover:shadow-[0_20px_50px_-15px_rgba(25,60,141,0.12)]"
                   >
                     <div className="flex justify-between items-start mb-6">
-                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-50 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
-                         <Icon className="w-7 h-7 text-slate-500 group-hover:text-[#193C8D] transition-colors" />
+                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white border border-yellow-400 group-hover:border-yellow-500 transition-colors">
+                         <Icon className="w-7 h-7 text-[#193C8D] group-hover:text-[#193C8D]/90 transition-colors" />
                       </div>
                       <ArrowUpRight className="w-5 h-5 text-slate-300 group-hover:text-[#193C8D] group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
                     </div>

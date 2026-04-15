@@ -243,7 +243,7 @@ export default function TaxContent({ reports }: TaxContentProps) {
                 <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between">
                   {isPowerBI ? (
                      <Link
-                      href={doc.url}
+                      href={`/resources/${doc.id}`}
                       className="flex items-center justify-center gap-2 w-full py-2 bg-[#193C8D] text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#E7B947] hover:text-[#193C8D] transition-all active:scale-95"
                     >
                       Analyze Report <ArrowUpRight size={14} />

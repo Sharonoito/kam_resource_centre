@@ -101,18 +101,21 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
       prisma.icms_master.groupBy({
         by: ["origin_country"],
         _count: { id: true },
+        where, // Apply filters to the top partners too
         orderBy: { _count: { id: "desc" } },
         take: 5,
       }),
       prisma.icms_master.groupBy({
         by: ["station"],
         _count: { id: true },
+        where,
         orderBy: { _count: { id: "desc" } },
         take: 20,
       }),
       prisma.icms_master.groupBy({
         by: ["hs_chapter"],
         _count: { id: true },
+        where,
         orderBy: { _count: { id: "desc" } },
         take: 25,
       }),
@@ -123,13 +126,9 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
   const pie = declType.map(d => ({ name: d.regime || "Other", y: d._count.id }));
   const totalPages = Math.ceil(total / pageSize) || 1;
 
-  /**
-   * DE-DUPLICATION LOGIC
-   * We merge fetchKRAResearchResources and kraKamContent.
-   * If a file exists in both, we prioritize the fetchKRAResearchResources version.
-   */
   const allResources: any[] = uploadedResources.map((doc: any) => ({
     ...doc,
+    raw_id: doc.id,
     id: `upload-${doc.id}`,
     display_type: doc.content_type || doc.document_type || "Document"
   }));
@@ -140,12 +139,13 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
     const normalizedTitle = c.title.toLowerCase().trim();
     if (!existingTitles.has(normalizedTitle)) {
       allResources.push({
+        raw_id: c.id,
         id: `kam-${c.id}`,
         title: c.title,
         description: c.description,
         sector: "KRA Research",
         display_type: c.content_type || "Document",
-        year: 2024,
+        year: c.published_date ? new Date(c.published_date).getFullYear() : 2024,
         publisher: "KAM Upload",
         pdf_url: (c as any).pdf_url || (c as any).file_url || null,
         powerbi_url: (c as any).powerbi_url || null
@@ -204,14 +204,12 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
                   <div className="font-semibold text-slate-800 truncate" title={doc.title}>{doc.title}</div>
                   <div className="text-xs text-slate-400">{doc.year || ""} {doc.publisher ? `• ${doc.publisher}` : ""}</div>
                   <div className="flex gap-4 mt-2">
+                    <Link href={`/resources/${doc.raw_id}`} className="text-xs font-bold text-blue-700 hover:underline">
+                      View Resource
+                    </Link>
                     {doc.pdf_url && (
-                      <a href={doc.pdf_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-blue-700 hover:underline">
-                        Download PDF
-                      </a>
-                    )}
-                    {doc.powerbi_url && (
-                      <a href={doc.powerbi_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-amber-700 hover:underline">
-                        View Power BI
+                      <a href={doc.pdf_url} download className="text-xs font-bold text-slate-400 hover:text-blue-700 flex items-center gap-1 transition-colors">
+                        Download
                       </a>
                     )}
                   </div>
@@ -222,7 +220,7 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
         </section>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <iframe title="KRA Trade Intelligence" src={POWER_BI_URL} className="w-full aspect-video border-0" />
+          <iframe title="KRA Trade Intelligence" src={POWER_BI_URL} className="w-full aspect-video border-0 block" allowFullScreen />
         </div>
 
         <div className="flex flex-col xl:flex-row gap-8">
@@ -242,7 +240,7 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
                   <label className="text-xs text-slate-500 mb-1 block">Search</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <input name="search" defaultValue={search} placeholder="Entry or HS Code" className={`${inputStyle} pl-9`} />
+                    <input name="search" defaultValue={search} placeholder="HS Code or Desc" className={`${inputStyle} pl-9`} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -284,7 +282,6 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-tight">
                       <tr>
-                        <th className="px-6 py-4 text-left">Entry Number</th>
                         <th className="px-6 py-4 text-left">Description</th>
                         <th className="px-6 py-4 text-left">Location</th>
                         <th className="px-6 py-4 text-right">FOB Value (KES)</th>
@@ -293,13 +290,10 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
                     <tbody className="divide-y border-t">
                       {records.map(r => (
                         <tr key={r.id} className="hover:bg-blue-50/40 transition-colors group">
-                          <td className="px-6 py-4">
-                            <div className="font-mono font-bold text-blue-900">{r.entry_number}</div>
-                            <div className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase">Ref: {r.id}</div>
-                          </td>
                           <td className="px-6 py-4 max-w-xs md:max-w-md">
                             <span className="bg-blue-100 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded uppercase">{r.regime}</span>
-                            <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed italic mt-1">{r.good_description}</p>
+                            <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed italic mt-1 font-medium">{r.good_description}</p>
+                            <div className="text-[10px] text-slate-400 mt-1">HS Code: <span className="font-mono text-blue-600">{r.hscode}</span></div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-slate-800 font-bold text-xs">{r.origin_country}</div>
@@ -314,7 +308,7 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
                   </table>
                 </div>
                 <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
-                  <span className="text-[11px] font-medium text-slate-400">Total: {total.toLocaleString()} records</span>
+                  <span className="text-[11px] font-medium text-slate-400">Showing {records.length} of {total.toLocaleString()} records</span>
                   <div className="flex gap-2">
                     <Link href={`?page=${page - 1}&pageSize=${pageSize}`} className={`text-[11px] font-bold uppercase px-4 py-2 border rounded-xl bg-white ${page <= 1 ? "opacity-20 pointer-events-none" : ""}`}>Back</Link>
                     <Link href={`?page=${page + 1}&pageSize=${pageSize}`} className={`text-[11px] font-bold uppercase px-4 py-2 bg-[#1e3a8a] text-white rounded-xl ${page >= totalPages ? "opacity-20 pointer-events-none" : ""}`}>Next</Link>
@@ -332,10 +326,11 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
                   </div>
                   <h3 className="text-lg font-bold mb-4 tracking-tight">Top Trade Partners</h3>
                   <div className="space-y-3.5">
+                    {/* Dynamic numbers based on the filtered data set */}
                     {countries.slice(0, 3).map((c, i) => (
                       <div key={`partner-${i}`} className="flex justify-between items-center">
                         <span className="flex items-center gap-3 text-sm font-semibold text-slate-800">
-                          <Globe className="h-4 w-4 text-slate-600" /> {c.origin_country}
+                          <Globe className="h-4 w-4 text-slate-600" /> {c.origin_country || "Unknown"}
                         </span>
                         <div className="flex flex-col items-end">
                             <span className="font-mono font-bold text-slate-900">{c._count.id.toLocaleString()}</span>
@@ -356,7 +351,7 @@ export default async function KraTradeIntelligencePage({ searchParams }: PagePro
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4">
                  <div className="bg-blue-50 p-3 rounded-xl"><Database className="h-5 w-5 text-blue-600" /></div>
                  <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 leading-none mb-1">Total Dataset</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-400 leading-none mb-1">Filtered Set</p>
                     <p className="text-lg font-black text-slate-800 leading-none">{total.toLocaleString()}</p>
                  </div>
               </div>

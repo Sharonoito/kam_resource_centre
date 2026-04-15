@@ -6,6 +6,24 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight, ChevronRight, Menu, X } from "lucide-react"
+import { 
+  BeakerIcon, 
+  TruckIcon, 
+  BuildingOffice2Icon, 
+  PresentationChartLineIcon,
+  GlobeAltIcon,
+  BanknotesIcon,
+  BookOpenIcon,
+  BoltIcon,
+  DocumentTextIcon,
+  AcademicCapIcon, 
+  ScissorsIcon, 
+  ShoppingBagIcon,
+  FireIcon,
+  CircleStackIcon,
+  BriefcaseIcon,
+  PuzzlePieceIcon
+} from "@heroicons/react/24/outline"
 // Updated import to match the new type definition
 import { HS_SECTORS_ONLY } from "@/types/sectors"
 
@@ -233,7 +251,7 @@ export default function Navbar() {
                               }`}
                             >
                               <span className="flex items-center gap-2">
-                                <span>{sector.emoji}</span>
+                                <sector.icon className="w-4 h-4 flex-shrink-0 text-current" />
                                 <span className="line-clamp-1">{sector.name}</span>
                               </span>
                               <ChevronRight className="w-3 h-3 shrink-0 opacity-50" />
@@ -243,26 +261,21 @@ export default function Navbar() {
                       </div>
 
                       <div className="flex-1 border-l border-zinc-100 pl-8">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">
-                          HS Sections — {hoveredSector.name}
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6">
+                          Related Sectors
                         </p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {hoveredSector.sectionsData.map((sec) => (
-                            <Link key={sec.id} href={sec.path} onClick={() => setActiveMenu(null)} className="group flex flex-col p-3 rounded-xl hover:bg-zinc-50 border border-transparent hover:border-zinc-100 transition">
-                              <span className="text-[#193C8D] text-sm font-semibold group-hover:text-[#E7B947] transition-colors">
-                                <span className="text-zinc-400 font-mono mr-1">{sec.id}</span>
-                                {sec.name}
-                              </span>
-                              <span className="text-zinc-400 text-xs mt-0.5 line-clamp-1">{sec.description}</span>
-                            </Link>
-                          ))}
-                          <Link href={`/sectors/${hoveredSector.slug}`} onClick={() => setActiveMenu(null)} className="group flex items-center gap-2 p-3 rounded-xl border border-dashed border-zinc-200 hover:border-[#193C8D] transition col-span-2">
-                            <span className="text-xs font-bold text-[#193C8D] group-hover:text-[#E7B947] transition-colors">
-                              View all {hoveredSector.name} resources
+                        <Link href={`/sectors/${hoveredSector.slug}`} onClick={() => setActiveMenu(null)} className="group flex items-center gap-2 p-6 rounded-xl border border-dashed border-zinc-200 hover:border-[#193C8D] hover:bg-zinc-50 transition w-full">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center group-hover:from-[#193C8D]/10 group-hover:to-[#E7B947]/10 transition-all">
+                            <hoveredSector.icon className="w-5 h-5 text-slate-600 group-hover:text-[#193C8D] transition-colors" />
+                          </div>
+                          <div>
+                            <span className="text-sm font-bold text-[#193C8D] group-hover:text-[#E7B947] transition-colors block">
+                              View {hoveredSector.name} Resources
                             </span>
-                            <ArrowRight className="w-3.5 h-3.5 text-[#193C8D] group-hover:text-[#E7B947] transition-colors" />
-                          </Link>
-                        </div>
+                            <span className="text-xs text-zinc-500">All documents & dashboards</span>
+                          </div>
+                          <ArrowRight className="w-4 h-4 ml-auto text-zinc-400 group-hover:text-[#193C8D] transition-colors" />
+                        </Link>
                       </div>
                     </div>
                   ) : (
@@ -342,7 +355,7 @@ export default function Navbar() {
                         <div className="bg-white p-2 grid grid-cols-1 gap-1">
                           {HS_SECTORS_ONLY.map((sector) => (
                             <Link key={sector.id} href={`/sectors/${sector.slug}`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50" onClick={() => setMobileOpen(false)}>
-                              <span>{sector.emoji}</span>
+                              <sector.icon className="w-4 h-4 flex-shrink-0 text-current" />
                               <span className="line-clamp-1">{sector.name}</span>
                             </Link>
                           ))}
