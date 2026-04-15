@@ -1,24 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Fix upload size limit for large PDFs (Turbopack)
+  // 1. THE WEIGHT SHRUNKER: This helps fix that 300MB Vercel error
+  output: 'standalone',
+
   experimental: {
-    turbopack: {
-      resolveAlias: {
-        canvas: false,
-      },
-    },
-    serverActions: true,
-      middlewareClientMaxBodySize: 50 * 1024 * 1024, // 50MB limit for uploads
+    // 2. THE RENAME: Updated from middleware... to proxy...
+    proxyClientMaxBodySize: 50 * 1024 * 1024, // 50MB
+    
+    // 3. THE PDF FIX: Keeps PDF.js happy without bundling the heavy 'canvas' library
+    serverComponentsExternalPackages: ['canvas'],
   },
 
-  // API body size limit for webpack (fallback)
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
-  },
-
-  // Image optimization
+  // 4. IMAGE SETTINGS: Kept exactly as you had them for Power BI
   images: {
     remotePatterns: [
       {
