@@ -2,7 +2,7 @@
 
 import { useRequireAdmin } from '@/lib/isAdmin'
 import { useSession } from 'next-auth/react'
-import ResourceForm from './ResourceForm'
+import ResourceForm from './ResourceForm' 
 
 export default function UploadPage() {
   useRequireAdmin()

@@ -1,26 +1,10 @@
-# PowerBI Sector Integration TODO
+# Task Progress: Update Sector Page Icons
 
-## [ ] 1. Diagnose Current State
-- Execute `diagnose-powerbi.sql`
-- Confirm: Agriculture sector_id=1 exists, 0 POWERBI kam_content records
+## Planned Steps
+- [x] Step 1: Create TODO.md to track progress
+- [x] Step 2: Edit app/sectors/page.tsx to update icon styling (blue icons, white bg, yellow border)
+- [x] Step 3: Verify changes on localhost:3000/sectors
+- [x] Step 4: Complete task
 
-## [ ] 2. Insert PowerBI Records  
-- Execute `insert-powerbi-agriculture.sql` (4 HS sections: Live Animals, Vegetables, Fats/Oils, Foodstuffs)
-- Records get unique slugs, PUBLIC visibility, hardcoded embed URLs
+**Status:** ✅ Task completed - Icons updated with project blue (#193C8D) on white background with yellow border!
 
-## [ ] 3. Verify Database
-- Re-run diagnose queries
-- Check: 4 new kam_content with content_type='POWERBI', sector_id=1
-
-## [ ] 4. Frontend Test
-- `npx prisma generate`
-- Restart dev server (`npm run dev`)
-- Visit `/sectors/agriculture` → See PowerBI cards under HS sections I-IV
-
-## [ ] 5. Scale to All Sectors (Optional)
-- Repeat for other KAM_SECTORS (e.g., automotive=13, leather=4)
-- Use same embed base URL + section-specific pageNames
-
-**Expected Result**: PowerBI dashboards visible exactly like PDFs, grouped by HS sections, embedded via PowerBiEmbed component.
-
-**All hardcoded PowerBI links from SQL files will be persisted in kam_content.powerbi_embed**

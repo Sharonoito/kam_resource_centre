@@ -75,7 +75,7 @@ export async function GET(request: Request) {
     });
 
     // Transform results to include all relevant trade information
-    const results = tradeResults.map(item => ({
+    const results = tradeResults.map((item: any) => ({
       id: item.id,
       // Basic identification
       entry_number: item.entry_number,
@@ -156,8 +156,8 @@ export async function GET(request: Request) {
         regime: regime || 'all',
         year: year || null,
         country: country || null,
-        availableYears: years.map(y => y.year).filter(Boolean),
-        availableCountries: countries.map(c => c.origin_country).filter(Boolean)
+        availableYears: years.map((y: any) => y.year).filter(Boolean),
+        availableCountries: countries.map((c: any) => c.origin_country).filter(Boolean)
       }
     });
 

@@ -62,10 +62,26 @@ interface ResourceDocumentCardProps {
   showSector?: boolean
 }
 
+import { useEffect, useState } from "react"
+
 export default function ResourceDocumentCard({ doc, showSector = false }: ResourceDocumentCardProps) {
   const iconType = getFileIconType(doc.filename, doc.mime_type)
-  const baseHref = getDocumentHref(doc)
+const isPowerBi = doc.content_type === 'POWERBI' || doc.document_type === 'POWERBI';
+const baseHref = isPowerBi ? `/sectors/report/${doc.id}` : getDocumentHref(doc);
   const hasLink = baseHref !== "#"
+
+  // Hydration-safe date formatting
+  const [createdAtStr, setCreatedAtStr] = useState<string>("")
+  useEffect(() => {
+    if (doc.created_at) {
+      // Accepts string or Date, but always formats on client
+      const date = typeof doc.created_at === "string" ? new Date(doc.created_at) : doc.created_at
+      if (!isNaN(date as any)) {
+        setCreatedAtStr(date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }))
+      }
+    }
+  }, [doc.created_at])
+
   return (
     <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#E7B947]/60 transition-all p-5 flex gap-5">
       <div className="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-[#193C8D]/5 transition-colors">
@@ -82,6 +98,10 @@ export default function ResourceDocumentCard({ doc, showSector = false }: Resour
           {doc.year && (
             <span className="text-[10px] text-gray-400 font-mono">{doc.year}</span>
           )}
+          {/* Hydration-safe created_at display */}
+          {createdAtStr && (
+            <span className="text-[10px] text-gray-400 font-mono">Uploaded {createdAtStr}</span>
+          )}
         </div>
         <h3 className="font-semibold text-sm text-[#0B1E3A] leading-snug mb-1 line-clamp-2 group-hover:text-[#193C8D] transition-colors">
           {doc.filename}
@@ -95,16 +115,17 @@ export default function ResourceDocumentCard({ doc, showSector = false }: Resour
           {hasLink ? (
             <>
               <a
-                href={`${baseHref}?mode=preview`}
-                target="_blank"
-                rel="noopener noreferrer"
+href={baseHref}
+                target={isPowerBi ? "_self" : "_blank"}
+                rel={isPowerBi ? undefined : "noopener noreferrer"}
                 className="inline-flex items-center gap-1.5 bg-[#193C8D] hover:bg-[#0B1E3A] text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
               >
                 <Eye className="w-3.5 h-3.5" />
                 Preview
               </a>
               <a
-                href={`${baseHref}?mode=download`}
+href={isPowerBi ? `/sectors/report/${doc.id}` : `${baseHref}?mode=download`}
+                download={!isPowerBi}
                 className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-[#193C8D] text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-gray-50 text-gray-700"
               >
                 <Download className="w-3.5 h-3.5" />

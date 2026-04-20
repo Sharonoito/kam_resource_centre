@@ -16,9 +16,9 @@ async function main() {
     const fq = `${t.table_schema}.${t.table_name}`;
     try {
       const rows = await prisma.$queryRawUnsafe(`select count(*)::int as c from ${fq}`);
-      console.log(fq, rows[0]?.c ?? 0);
+      // console.log(fq, rows[0]?.c ?? 0);
     } catch (e) {
-      console.log(fq, 'ERR', e.message);
+      // console.log(fq, 'ERR', e.message);
     }
   }
 }

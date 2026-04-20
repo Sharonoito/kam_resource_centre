@@ -1,10 +1,13 @@
-import { Playfair_Display, DM_Sans, Poppins } from "next/font/google";
+import { Playfair_Display, DM_Sans, Poppins, Geist } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import Chatbot from "@/components/Chatbot";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -33,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${poppins.variable}`}>
+    <html lang="en" className={cn(playfair.variable, dmSans.variable, poppins.variable, "font-sans", geist.variable)}>
       <head>
         <script src="/chat-toggle.js" async defer />
       </head>

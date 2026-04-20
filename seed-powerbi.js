@@ -514,7 +514,7 @@ const POWERBI_RECORDS = [
   const deleted = await prisma.kam_content.deleteMany({
     where: { title: { contains: 'TEST PowerBI' } },
   });
-  if (deleted.count > 0) console.log(`Removed ${deleted.count} test record(s)`);
+  if (deleted.count > 0) {/* console.log(`Removed ${deleted.count} test record(s)`); */}
 
   // 2. Upsert every proper record
   for (const record of POWERBI_RECORDS) {
@@ -542,7 +542,7 @@ const POWERBI_RECORDS = [
       },
     });
 
-    console.log(`✓  ${record.slug}  →  sector_id=${record.sector_id}  tags="${record.tags}"`);
+    /* console.log(`✓  ${record.slug}  →  sector_id=${record.sector_id}  tags="${record.tags}"`); */
   }
 
   // 3. Verify final state
@@ -552,7 +552,7 @@ const POWERBI_RECORDS = [
     orderBy: { id: 'asc' },
   });
 
-  console.log('\nAll POWERBI records now in database:');
+  /* console.log('\nAll POWERBI records now in database:'); */
   console.table(all);
 
   await prisma.$disconnect();

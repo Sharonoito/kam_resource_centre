@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { getPowerBiReportById } from '@/lib/documents';
-import { KAM_SECTORS } from '@/types/sectors';
+// Updated to use the correct specialized export
+import { HS_SECTORS_ONLY } from '@/types/sectors';
 
 interface Props {
   params: Promise<{ slug: string; id: string }>;
@@ -14,7 +15,8 @@ export default async function ReportViewerPage({ params }: Props) {
 
   if (isNaN(reportId)) notFound();
 
-  const sector = KAM_SECTORS.find(s => s.slug === slug);
+  // Updated lookup to use HS_SECTORS_ONLY
+  const sector = HS_SECTORS_ONLY.find(s => s.slug === slug);
   if (!sector) notFound();
 
   const report = await getPowerBiReportById(reportId);

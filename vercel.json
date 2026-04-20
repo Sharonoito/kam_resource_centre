@@ -1,0 +1,8 @@
+{
+  "installCommand": "npm install --legacy-peer-deps",
+  "functions": {
+    "app/api/admin/content/route.ts": {
+"excludeFiles":"node_modules/{canvas,bcrypt,xlsx,@prisma/engines}/**"
+    }
+  }
+}

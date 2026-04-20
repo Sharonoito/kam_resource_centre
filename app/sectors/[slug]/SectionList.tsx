@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { ArrowLeft, Layers, ArrowRight } from 'lucide-react';
-import { HsSection, KAM_SECTORS, getSectionSlug } from '@/types/sectors';
+// Removed getSectionSlug from imports
+import { HsSection, HS_SECTORS_ONLY } from '@/types/sectors';
 import { notFound } from 'next/navigation';
-
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -10,7 +10,9 @@ interface Props {
 
 export default async function SectionList({ params }: Props) {
   const { slug } = await params;
-  const sector = KAM_SECTORS.find(s => s.slug === slug);
+  
+  // Using the updated HS_SECTORS_ONLY constant for the KAM industrial sectors
+  const sector = HS_SECTORS_ONLY.find(s => s.slug === slug);
 
   if (!sector) notFound();
 
@@ -45,11 +47,13 @@ export default async function SectionList({ params }: Props) {
         {/* Sections Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sector.sectionsData.map((section: HsSection) => {
-            const sectionSlug = getSectionSlug(section.path);
+            // Manually generating the slug from the name to bypass the missing helper
+            const sectionSlug = section.name.toLowerCase().replace(/\s+/g, '-');
+            
             return (
               <Link
                 key={section.id}
-                href={`./sections/${sectionSlug}`}
+                href={`/sectors/${slug}/sections/${sectionSlug}`}
                 className="group bg-white/70 backdrop-blur-sm hover:bg-white border border-white/50 hover:border-[#E7B947]/50 shadow-lg hover:shadow-2xl rounded-2xl p-8 h-full transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02]"
               >
                 <div className="flex items-start gap-4 h-full">
@@ -90,4 +94,3 @@ export default async function SectionList({ params }: Props) {
     </section>
   );
 }
-
